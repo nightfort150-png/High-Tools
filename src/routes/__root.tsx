@@ -29,14 +29,18 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Dexbin.lol" },
+      { name: "description", content: "DEXBIN a fan made dition of doxbin" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Dexbin.lol" },
+      { property: "og:description", content: "DEXBIN a fan made dition of doxbin" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Dexbin.lol" },
+      { name: "twitter:description", content: "DEXBIN a fan made dition of doxbin" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/HC5zI0yKWydAn34yfN9UzLCsz3E3/social-images/social-1777327508997-8691de0d-e339-46f8-8f6d-583450e2446c.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/HC5zI0yKWydAn34yfN9UzLCsz3E3/social-images/social-1777327508997-8691de0d-e339-46f8-8f6d-583450e2446c.webp" },
     ],
     links: [
       {
