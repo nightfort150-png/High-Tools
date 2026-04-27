@@ -21,7 +21,16 @@ const BANNER = String.raw`▓█████▄ ▓█████ ▒██   �
  ░                            ░                `;
 
 type Line = { text: string; color?: string };
-type Stage = "banner" | "askWebhook" | "validating" | "confirm" | "done" | "error";
+type Stage =
+  | "banner"
+  | "askWebhook"
+  | "validating"
+  | "confirm"
+  | "askVictim"
+  | "searching"
+  | "sending"
+  | "done"
+  | "error";
 
 export function TerminalWindow({ open, minimized, zIndex, onClose, onMinimize, onFocus }: Props) {
   const [maximized, setMaximized] = useState(false);
