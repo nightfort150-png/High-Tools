@@ -546,10 +546,26 @@ export function FullscreenTerminal() {
         <div className="opacity-70">secure-tty • {tool ?? "menu"}</div>
       </div>
 
-      {/* Centered banner */}
-      <div className="relative z-10 flex justify-center border-b px-3 pb-3 pt-4" style={{ borderColor: "oklch(1 0 0 / 0.06)" }}>
+      {/* Centered banner (HIGH next to weed leaf) */}
+      <div
+        className="relative z-10 flex flex-wrap items-center justify-center gap-4 border-b px-3 pb-3 pt-4 md:gap-8"
+        style={{ borderColor: "oklch(1 0 0 / 0.06)" }}
+      >
         <pre
-          className="m-0 text-center font-mono text-[10px] leading-[1.05] sm:text-[11px] md:text-[12px]"
+          aria-hidden
+          className="m-0 hidden font-mono leading-[1] md:block"
+          style={{
+            color: "oklch(0.78 0.20 145)",
+            textShadow: "0 0 6px oklch(0.65 0.22 145 / 0.55), 0 0 18px oklch(0.65 0.22 145 / 0.25)",
+            whiteSpace: "pre",
+            fontSize: "5px",
+            letterSpacing: "0px",
+          }}
+        >
+{LEAF}
+        </pre>
+        <pre
+          className="m-0 text-center font-mono text-[10px] leading-[1.05] sm:text-[11px] md:text-[14px]"
           style={{
             color: "oklch(0.82 0.22 145)",
             textShadow: "0 0 10px oklch(0.65 0.22 145 / 0.7), 0 0 24px oklch(0.65 0.22 145 / 0.3)",
@@ -557,6 +573,20 @@ export function FullscreenTerminal() {
           }}
         >
 {bannerLinesShown.join("\n")}{!bannerDone && <span className="terminal-cursor">█</span>}
+        </pre>
+        <pre
+          aria-hidden
+          className="m-0 hidden font-mono leading-[1] md:block"
+          style={{
+            color: "oklch(0.78 0.20 145)",
+            textShadow: "0 0 6px oklch(0.65 0.22 145 / 0.55), 0 0 18px oklch(0.65 0.22 145 / 0.25)",
+            whiteSpace: "pre",
+            fontSize: "5px",
+            letterSpacing: "0px",
+            transform: "scaleX(-1)",
+          }}
+        >
+{LEAF}
         </pre>
       </div>
       {bannerDone && (
