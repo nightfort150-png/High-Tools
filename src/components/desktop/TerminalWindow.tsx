@@ -399,23 +399,34 @@ export function FullscreenTerminal() {
   };
 
   // ---- Rare username finder ----
-  const ADJ = ["zen","void","neo","raw","luna","kilo","mute","echo","jinx","onyx","nova","flux","yoru","slay","pulse","ravn","drx","vex","ryze","kira"];
-  const NOUNS = ["sky","fox","wolf","cat","bee","ash","ink","dot","ace","pix","bot","sin","ace","koi","ren","kid","vox","hex","blu","rai"];
-  const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789_";
-  const generateName = (len: number) => {
+  const ADJ = ["zen","void","neo","raw","luna","kilo","mute","echo","jinx","onyx","nova","flux","yoru","slay","pulse","ravn","drx","vex","ryze","kira","ghost","frost","blaze","crisp","dusk","nyx","halo","reso","vibe","prism","stoic","kaos","sable","mist","rune","ember","drift","glow","hush"];
+  const NOUNS = ["sky","fox","wolf","cat","bee","ash","ink","dot","ace","pix","bot","sin","koi","ren","kid","vox","hex","blu","rai","jet","arc","rune","tide","wave","node","byte","loop","core","void","sage","myst","echo","fang","claw","lynx","hawk","raven","moth","cub"];
+  const LETTERS = "abcdefghijklmnopqrstuvwxyz";
+  const ALNUM = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const ALL = "abcdefghijklmnopqrstuvwxyz0123456789_";
+  const randStr = (n: number, set: string) =>
+    Array.from({ length: n }, () => set[rand(0, set.length - 1)]).join("");
+  const generateName = (len: number): string => {
+    // Short names: random-letter handles (look like "rare" claimed-style names)
     if (len <= 4) {
-      return Array.from({ length: len }, () => CHARS[rand(0, 25)]).join("");
+      const set = Math.random() < 0.7 ? LETTERS : ALNUM;
+      return randStr(len, set);
     }
+    // Mid: word + filler
     if (len <= 8) {
-      const a = pick(ADJ);
-      const b = pick(NOUNS);
-      let s = (a + b).slice(0, len);
-      while (s.length < len) s += CHARS[rand(0, CHARS.length - 1)];
-      return s;
+      const word = pick(Math.random() < 0.5 ? ADJ : NOUNS);
+      if (word.length === len) return word;
+      if (word.length > len) return word.slice(0, len);
+      return word + randStr(len - word.length, ALNUM);
     }
-    let s = pick(ADJ) + "_" + pick(NOUNS) + rand(0, 99);
-    while (s.length < len) s += CHARS[rand(0, CHARS.length - 1)];
-    return s.slice(0, len);
+    // Long: combine two words with optional separator + digits
+    const a = pick(ADJ);
+    const b = pick(NOUNS);
+    const sep = Math.random() < 0.4 ? "_" : "";
+    let base = a + sep + b;
+    if (base.length > len) base = base.slice(0, len);
+    if (base.length < len) base += randStr(len - base.length, ALL);
+    return base;
   };
 
   const submitRareLen = async (val: string) => {
