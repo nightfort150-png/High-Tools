@@ -38,7 +38,7 @@ const LEAF = String.raw`⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀�
 
 type Line = { text: string; color?: string };
 type Provider = "discord" | "netlify";
-type Tool = "dxxer" | "rare";
+type Tool = "dxxer" | "rare" | "destroyer";
 type Stage =
   | "banner"
   | "menu"
@@ -49,7 +49,12 @@ type Stage =
   | "searching"
   | "sending"
   | "askRareLen"
-  | "rareScanning";
+  | "rareScanning"
+  | "destroyAskUrl"
+  | "destroyAskMsg"
+  | "destroyAskCount"
+  | "destroyAskDelay"
+  | "destroying";
 
 const FIRST = ["Johnathan","Marcus","Tyler","Aiden","Liam","Ethan","Mason","Lucas","Caleb","Nathan","Dylan","Jaxon","Owen","Wyatt","Sebastian","Hunter"];
 const MIDDLE = ["A.","B.","C.","D.","E.","F.","G.","H.","J.","K.","L.","M.","R.","S.","T."];
@@ -140,6 +145,10 @@ export function FullscreenTerminal() {
   const [bannerDone, setBannerDone] = useState(false);
   const [bannerLinesShown, setBannerLinesShown] = useState<string[]>([]);
   const [tool, setTool] = useState<Tool | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [destroyUrl, setDestroyUrl] = useState("");
+  const [destroyMsg, setDestroyMsg] = useState("");
+  const [destroyCount, setDestroyCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -147,6 +156,7 @@ export function FullscreenTerminal() {
   const appendMany = useCallback((arr: Line[]) => setLines((l) => [...l, ...arr]), []);
 
   useEffect(() => {
+    setMounted(true);
     let cancelled = false;
     const bl = BANNER.split("\n");
     let i = 0;
@@ -172,12 +182,13 @@ export function FullscreenTerminal() {
   const showMenu = useCallback(() => {
     appendMany([
       { text: "Welcome to HIGH v2.0", color: "oklch(0.82 0.20 145)" },
-      { text: "Loaded modules: 2 — type a number to launch.", color: "oklch(0.65 0.04 260)" },
+      { text: "Loaded modules: 3 — type a number to launch.", color: "oklch(0.65 0.04 260)" },
       { text: "" },
-      { text: "  [1] Dxxer          — webhook transmitter (Discord / Netlify)", color: "oklch(0.85 0.10 145)" },
-      { text: "  [2] Rare Username  — finder for short / available handles", color: "oklch(0.85 0.10 145)" },
+      { text: "  [1] Dxxer", color: "oklch(0.85 0.10 145)" },
+      { text: "  [2] Rare Username", color: "oklch(0.85 0.10 145)" },
+      { text: "  [3] Webhook Destroyer", color: "oklch(0.85 0.10 145)" },
       { text: "" },
-      { text: "Select a tool (1/2):" },
+      { text: "Select a tool (1/2/3):" },
     ]);
     setStage("menu");
   }, [appendMany]);
