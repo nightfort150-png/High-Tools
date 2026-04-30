@@ -427,31 +427,54 @@ export function FullscreenTerminal() {
       return;
     }
     setStage("rareScanning");
-    await spinTask(`Initializing rare-name scanner (len=${n})`, 600);
-    await spinTask("Loading dictionary & namespace shards", 700);
-    await spinTask("Connecting to lookup nodes", 650);
+    await spinTask(`Initializing rare-name scanner (len=${n})`, 700);
+    await spinTask("Loading dictionary & namespace shards", 800);
+    await spinTask("Connecting to lookup nodes", 700);
     append({ text: "" });
-    append({ text: `[*] Scanning ${n}-char namespace...`, color: "oklch(0.78 0.16 200)" });
+    append({ text: `[*] Scanning ${n}-char namespace — target: 100 handles`, color: "oklch(0.78 0.16 200)" });
+    append({ text: "" });
 
-    const found: string[] = [];
-    const target = 8;
-    let attempts = 0;
-    while (found.length < target && attempts < 60) {
-      attempts++;
+    const TARGET = 100;
+    const found = new Set<string>();
+    let checked = 0;
+    let safety = 0;
+    while (found.size < TARGET && safety < 5000) {
+      safety++;
       const name = generateName(n);
-      await sleep(110);
-      const ok = Math.random() < 0.45;
+      if (found.has(name)) continue;
+      checked++;
+      await sleep(22);
+      const ok = Math.random() < 0.55;
       if (ok) {
-        await typewrite(`  [✓] @${name}  — available`, "oklch(0.85 0.18 140)", 8);
-        found.push(name);
+        found.add(name);
+        append({
+          text: `  [✓] @${name.padEnd(Math.max(n, 8))}  available  (${found.size}/${TARGET})`,
+          color: "oklch(0.85 0.18 140)",
+        });
       } else {
-        await typewrite(`  [✗] @${name}  — taken`, "oklch(0.55 0.04 260)", 6);
+        append({
+          text: `  [✗] @${name.padEnd(Math.max(n, 8))}  taken`,
+          color: "oklch(0.5 0.03 260)",
+        });
       }
     }
     append({ text: "" });
-    await typewrite(`[✓] Scan complete — ${found.length} available handle(s) found.`, "oklch(0.85 0.18 140)", 12);
+    await typewrite(
+      `[✓] Scan complete — ${found.size} available handle(s) from ${checked} checks.`,
+      "oklch(0.85 0.18 140)",
+      8,
+    );
     append({ text: "" });
-    found.forEach((f) => append({ text: `   • @${f}`, color: "oklch(0.82 0.20 145)" }));
+    append({ text: "── AVAILABLE HANDLES ──", color: "oklch(0.65 0.04 260)" });
+    const arr = Array.from(found);
+    // print in columns of 4
+    for (let i = 0; i < arr.length; i += 4) {
+      const row = arr
+        .slice(i, i + 4)
+        .map((h) => `@${h}`.padEnd(Math.max(n + 2, 12)))
+        .join("  ");
+      append({ text: `   ${row}`, color: "oklch(0.82 0.20 145)" });
+    }
     append({ text: "" });
     append({ text: "Type another length (3–20) or 'menu' to return:" });
     setStage("askRareLen");
