@@ -357,20 +357,23 @@ export function FullscreenTerminal() {
     }
     setStage("searching");
     const phases = [
-      `Locking onto target ${id}`,
-      "Resolving username & avatar",
-      "Querying gateway sessions",
-      "Scraping connected accounts",
-      "Pulling billing & payment methods",
-      "Reading hardware fingerprint (HWID)",
-      "Geolocating last known IP",
-      "Decrypting session cookies",
-      "Compiling profile dossier",
+      `[*] Locking onto target ${id}...`,
+      "[*] Using ONIST to resolve identity...",
+      "[*] Using ONIST to query session data...",
+      "[*] Using OSINT-X to scrape connected accounts...",
+      "[*] Using BillScope to pull payment methods...",
+      "[*] Using HWID-Trace to read hardware fingerprint...",
+      "[*] Using GeoIP-Hunter to locate IP...",
+      "[*] Using CookieRipper to decrypt session cookies...",
+      "[*] Compiling dossier...",
     ];
     for (const p of phases) {
-      await spinTask(p, 350 + Math.random() * 300);
+      await typewrite(p, "oklch(0.78 0.16 200)", 10);
+      await sleep(220 + Math.random() * 260);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
     }
-    await typewrite("[✓] Done.", "oklch(0.85 0.18 140)", 12);
+    append({ text: "" });
+    await typewrite("[✓] DONE", "oklch(0.85 0.18 140)", 14);
     await sleep(280);
 
     setStage("sending");
