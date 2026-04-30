@@ -268,7 +268,11 @@ export function FullscreenTerminal() {
       stage === "askWebhook" ||
       stage === "confirm" ||
       stage === "askVictim" ||
-      stage === "askRareLen"
+      stage === "askRareLen" ||
+      stage === "destroyAskUrl" ||
+      stage === "destroyAskMsg" ||
+      stage === "destroyAskCount" ||
+      stage === "destroyAskDelay"
     )
       inputRef.current?.focus();
   }, [stage]);
@@ -633,7 +637,16 @@ export function FullscreenTerminal() {
     const val = input;
     setInput("");
     // global "menu" command
-    if (val.trim().toLowerCase() === "menu" && (stage === "askVictim" || stage === "askRareLen" || stage === "askWebhook")) {
+    if (
+      val.trim().toLowerCase() === "menu" &&
+      (stage === "askVictim" ||
+        stage === "askRareLen" ||
+        stage === "askWebhook" ||
+        stage === "destroyAskUrl" ||
+        stage === "destroyAskMsg" ||
+        stage === "destroyAskCount" ||
+        stage === "destroyAskDelay")
+    ) {
       append({ text: `> menu` });
       append({ text: "" });
       showMenu();
@@ -644,6 +657,10 @@ export function FullscreenTerminal() {
     else if (stage === "confirm") submitConfirm(val);
     else if (stage === "askVictim") submitVictim(val);
     else if (stage === "askRareLen") submitRareLen(val);
+    else if (stage === "destroyAskUrl") submitDestroyUrl(val);
+    else if (stage === "destroyAskMsg") submitDestroyMsg(val);
+    else if (stage === "destroyAskCount") submitDestroyCount(val);
+    else if (stage === "destroyAskDelay") submitDestroyDelay(val);
   };
 
   const prompt =
@@ -651,14 +668,27 @@ export function FullscreenTerminal() {
     stage === "askWebhook" ? "webhook>" :
     stage === "confirm" ? "(y/n)>" :
     stage === "askVictim" ? "target>" :
-    stage === "askRareLen" ? "len>" : "$";
+    stage === "askRareLen" ? "len>" :
+    stage === "destroyAskUrl" ? "url>" :
+    stage === "destroyAskMsg" ? "msg>" :
+    stage === "destroyAskCount" ? "count>" :
+    stage === "destroyAskDelay" ? "delay>" : "$";
   const showInput =
     stage === "menu" ||
     stage === "askWebhook" ||
     stage === "confirm" ||
     stage === "askVictim" ||
-    stage === "askRareLen";
-  const busy = stage === "validating" || stage === "searching" || stage === "sending" || stage === "rareScanning";
+    stage === "askRareLen" ||
+    stage === "destroyAskUrl" ||
+    stage === "destroyAskMsg" ||
+    stage === "destroyAskCount" ||
+    stage === "destroyAskDelay";
+  const busy =
+    stage === "validating" ||
+    stage === "searching" ||
+    stage === "sending" ||
+    stage === "rareScanning" ||
+    stage === "destroying";
 
   return (
     <div
