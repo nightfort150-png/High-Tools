@@ -207,27 +207,40 @@ export function FullscreenTerminal() {
     [],
   );
 
+  // Progress-bar style loader: [████████░░░░░░░░] 53%  label
   const spinTask = useCallback(
     async (label: string, ms: number, color = "oklch(0.78 0.16 200)") => {
+      const WIDTH = 24;
+      const renderBar = (pct: number) => {
+        const filled = Math.round((pct / 100) * WIDTH);
+        const bar = "█".repeat(filled) + "░".repeat(WIDTH - filled);
+        return `[${bar}] ${String(pct).padStart(3, " ")}%  ${label}`;
+      };
       let idx = -1;
       setLines((l) => {
         idx = l.length;
-        return [...l, { text: `${SPIN[0]} ${label}`, color }];
+        return [...l, { text: renderBar(0), color }];
       });
       const start = Date.now();
-      let s = 0;
-      while (Date.now() - start < ms) {
-        await sleep(80);
-        s = (s + 1) % SPIN.length;
+      const step = 40;
+      while (true) {
+        await sleep(step);
+        const elapsed = Date.now() - start;
+        const pct = Math.min(99, Math.floor((elapsed / ms) * 100));
         setLines((l) => {
           const copy = l.slice();
-          if (copy[idx]) copy[idx] = { text: `${SPIN[s]} ${label}`, color };
+          if (copy[idx]) copy[idx] = { text: renderBar(pct), color };
           return copy;
         });
+        if (elapsed >= ms) break;
       }
       setLines((l) => {
         const copy = l.slice();
-        if (copy[idx]) copy[idx] = { text: `[✓] ${label}`, color: "oklch(0.85 0.18 140)" };
+        if (copy[idx])
+          copy[idx] = {
+            text: `[${"█".repeat(WIDTH)}] 100%  ${label}  ✓`,
+            color: "oklch(0.85 0.18 140)",
+          };
         return copy;
       });
     },
