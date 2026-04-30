@@ -5,8 +5,8 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "dexbin — terminal" },
-      { name: "description", content: "dexbin terminal interface." },
+      { title: "HIGH — terminal" },
+      { name: "description", content: "HIGH terminal interface." },
     ],
   }),
 });
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <main className="h-screen w-screen overflow-hidden bg-black">
-      <h1 className="sr-only">dexbin terminal</h1>
+      <h1 className="sr-only">HIGH terminal</h1>
       <FullscreenTerminal />
     </main>
   );

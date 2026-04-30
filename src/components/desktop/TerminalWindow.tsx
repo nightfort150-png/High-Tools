@@ -1,26 +1,26 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
-const BANNER = String.raw`▓█████▄ ▓█████ ▒██   ██▒ ▄▄▄▄    ██▓ ███▄    █ 
-▒██▀ ██▌▓█   ▀ ▒▒ █ █ ▒░▓█████▄ ▓██▒ ██ ▀█   █ 
-░██   █▌▒███   ░░  █   ░▒██▒ ▄██▒██▒▓██  ▀█ ██▒
-░▓█▄   ▌▒▓█  ▄  ░ █ █ ▒ ▒██░█▀  ░██░▓██▒  ▐▌██▒
-░▒████▓ ░▒████▒▒██▒ ▒██▒░▓█  ▀█▓░██░▒██░   ▓██░
- ▒▒▓  ▒ ░░ ▒░ ░▒▒ ░ ░▓ ░░▒▓███▀▒░▓  ░ ▒░   ▒ ▒ 
- ░ ▒  ▒  ░ ░  ░░░   ░▒ ░▒░▒   ░  ▒ ░░ ░░   ░ ▒░
- ░ ░  ░    ░    ░    ░   ░    ░  ▒ ░   ░   ░ ░ 
-   ░       ░  ░ ░    ░   ░       ░           ░ 
- ░                            ░                `;
+const BANNER = String.raw`██╗  ██╗██╗ ██████╗ ██╗  ██╗
+██║  ██║██║██╔════╝ ██║  ██║
+███████║██║██║  ███╗███████║
+██╔══██║██║██║   ██║██╔══██║
+██║  ██║██║╚██████╔╝██║  ██║
+╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═╝`;
 
 type Line = { text: string; color?: string };
 type Provider = "discord" | "netlify";
+type Tool = "dxxer" | "rare";
 type Stage =
   | "banner"
+  | "menu"
   | "askWebhook"
   | "validating"
   | "confirm"
   | "askVictim"
   | "searching"
-  | "sending";
+  | "sending"
+  | "askRareLen"
+  | "rareScanning";
 
 const FIRST = ["Johnathan","Marcus","Tyler","Aiden","Liam","Ethan","Mason","Lucas","Caleb","Nathan","Dylan","Jaxon","Owen","Wyatt","Sebastian","Hunter"];
 const MIDDLE = ["A.","B.","C.","D.","E.","F.","G.","H.","J.","K.","L.","M.","R.","S.","T."];
@@ -110,6 +110,7 @@ export function FullscreenTerminal() {
   const [hookUrl, setHookUrl] = useState<string>("");
   const [bannerDone, setBannerDone] = useState(false);
   const [bannerLinesShown, setBannerLinesShown] = useState<string[]>([]);
+  const [tool, setTool] = useState<Tool | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -125,45 +126,99 @@ export function FullscreenTerminal() {
       if (i < bl.length) {
         setBannerLinesShown((l) => [...l, bl[i]]);
         i++;
-        setTimeout(tick, 55);
+        setTimeout(tick, 75);
       } else {
         setTimeout(() => {
           if (cancelled) return;
           setBannerDone(true);
-          appendMany([
-            { text: "Welcome to dexbin v1.0", color: "oklch(0.85 0.18 140)" },
-            { text: "Initialized secure transfer protocol.", color: "oklch(0.65 0.04 260)" },
-            { text: "Supported endpoints: Discord webhooks, Netlify build hooks.", color: "oklch(0.65 0.04 260)" },
-            { text: "" },
-            { text: "Please enter your webhook URL (Discord or Netlify):" },
-          ]);
-          setStage("askWebhook");
-        }, 350);
+          showMenu();
+        }, 400);
       }
     };
     tick();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const showMenu = useCallback(() => {
+    appendMany([
+      { text: "Welcome to HIGH v2.0", color: "oklch(0.82 0.20 145)" },
+      { text: "Loaded modules: 2 — type a number to launch.", color: "oklch(0.65 0.04 260)" },
+      { text: "" },
+      { text: "  [1] Dxxer          — webhook transmitter (Discord / Netlify)", color: "oklch(0.85 0.10 145)" },
+      { text: "  [2] Rare Username  — finder for short / available handles", color: "oklch(0.85 0.10 145)" },
+      { text: "" },
+      { text: "Select a tool (1/2):" },
+    ]);
+    setStage("menu");
   }, [appendMany]);
+
+  // ---- shared loading animation (typing + spinner) ----
+  const SPIN = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"];
+  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+  const typewrite = useCallback(
+    async (text: string, color?: string, charDelay = 14) => {
+      // append empty line, then mutate it character by character
+      let idx = -1;
+      setLines((l) => {
+        idx = l.length;
+        return [...l, { text: "", color }];
+      });
+      for (let i = 1; i <= text.length; i++) {
+        await sleep(charDelay);
+        const slice = text.slice(0, i);
+        setLines((l) => {
+          const copy = l.slice();
+          if (copy[idx]) copy[idx] = { text: slice, color };
+          return copy;
+        });
+      }
+    },
+    [],
+  );
+
+  const spinTask = useCallback(
+    async (label: string, ms: number, color = "oklch(0.78 0.16 200)") => {
+      let idx = -1;
+      setLines((l) => {
+        idx = l.length;
+        return [...l, { text: `${SPIN[0]} ${label}`, color }];
+      });
+      const start = Date.now();
+      let s = 0;
+      while (Date.now() - start < ms) {
+        await sleep(80);
+        s = (s + 1) % SPIN.length;
+        setLines((l) => {
+          const copy = l.slice();
+          if (copy[idx]) copy[idx] = { text: `${SPIN[s]} ${label}`, color };
+          return copy;
+        });
+      }
+      setLines((l) => {
+        const copy = l.slice();
+        if (copy[idx]) copy[idx] = { text: `[✓] ${label}`, color: "oklch(0.85 0.18 140)" };
+        return copy;
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [lines, stage, bannerLinesShown]);
 
   useEffect(() => {
-    if (stage === "askWebhook" || stage === "confirm" || stage === "askVictim") inputRef.current?.focus();
+    if (
+      stage === "menu" ||
+      stage === "askWebhook" ||
+      stage === "confirm" ||
+      stage === "askVictim" ||
+      stage === "askRareLen"
+    )
+      inputRef.current?.focus();
   }, [stage]);
-
-  const typeLines = (msgs: Line[], delay = 90) =>
-    new Promise<void>((resolve) => {
-      let i = 0;
-      const next = () => {
-        if (i >= msgs.length) return resolve();
-        append(msgs[i]);
-        i++;
-        setTimeout(next, delay);
-      };
-      next();
-    });
 
   const detectProvider = (url: string): Provider | null => {
     if (/^https:\/\/(canary\.|ptb\.)?discord(app)?\.com\/api\/webhooks\//.test(url)) return "discord";
@@ -214,13 +269,11 @@ export function FullscreenTerminal() {
   };
 
   const promptVictim = async () => {
-    await typeLines([
-      { text: "" },
-      { text: "═══════════════════════════════════════════", color: "oklch(0.55 0.04 260)" },
-      { text: "  TARGET ACQUISITION MODULE", color: "oklch(0.78 0.16 200)" },
-      { text: "═══════════════════════════════════════════", color: "oklch(0.55 0.04 260)" },
-      { text: "Enter target Discord User ID:" },
-    ], 70);
+    append({ text: "" });
+    append({ text: "═══════════════════════════════════════════", color: "oklch(0.55 0.04 260)" });
+    await typewrite("  TARGET ACQUISITION MODULE", "oklch(0.78 0.16 200)", 18);
+    append({ text: "═══════════════════════════════════════════", color: "oklch(0.55 0.04 260)" });
+    await typewrite("Enter target Discord User ID:", undefined, 14);
     setStage("askVictim");
   };
 
@@ -250,23 +303,22 @@ export function FullscreenTerminal() {
       return;
     }
     setStage("searching");
-    const phases: Line[] = [
-      { text: `[*] Locking onto target ${id}...`, color: "oklch(0.78 0.16 200)" },
-      { text: "[*] Resolving username & avatar..." },
-      { text: "[*] Querying gateway sessions..." },
-      { text: "[*] Scraping connected accounts..." },
-      { text: "[*] Pulling billing & payment methods..." },
-      { text: "[*] Reading hardware fingerprint (HWID)..." },
-      { text: "[*] Geolocating last known IP..." },
-      { text: "[*] Decrypting session cookies..." },
-      { text: "[*] Compiling profile dossier...", color: "oklch(0.85 0.18 140)" },
+    const phases = [
+      `Locking onto target ${id}`,
+      "Resolving username & avatar",
+      "Querying gateway sessions",
+      "Scraping connected accounts",
+      "Pulling billing & payment methods",
+      "Reading hardware fingerprint (HWID)",
+      "Geolocating last known IP",
+      "Decrypting session cookies",
+      "Compiling profile dossier",
     ];
     for (const p of phases) {
-      append(p);
-      await new Promise((r) => setTimeout(r, 240 + Math.random() * 200));
+      await spinTask(p, 350 + Math.random() * 300);
     }
-    append({ text: "[✓] Done.", color: "oklch(0.85 0.18 140)" });
-    await new Promise((r) => setTimeout(r, 280));
+    await typewrite("[✓] Done.", "oklch(0.85 0.18 140)", 12);
+    await sleep(280);
 
     setStage("sending");
     append({ text: "[*] Transmitting payload via secure transfer protocol..." });
@@ -295,7 +347,7 @@ export function FullscreenTerminal() {
         append({ text: "[i] Netlify build triggered.", color: "oklch(0.78 0.16 200)" });
       }
       append({ text: "" });
-      append({ text: "Enter another target Discord User ID:" });
+      append({ text: "Enter another target Discord User ID (or type 'menu'):" });
       setStage("askVictim");
     } catch (e) {
       append({ text: `[!] Transmission failed: ${(e as Error).message}`, color: "var(--terminal-red)" });
@@ -304,22 +356,122 @@ export function FullscreenTerminal() {
     }
   };
 
+  // ---- Rare username finder ----
+  const ADJ = ["zen","void","neo","raw","luna","kilo","mute","echo","jinx","onyx","nova","flux","yoru","slay","pulse","ravn","drx","vex","ryze","kira"];
+  const NOUNS = ["sky","fox","wolf","cat","bee","ash","ink","dot","ace","pix","bot","sin","ace","koi","ren","kid","vox","hex","blu","rai"];
+  const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789_";
+  const generateName = (len: number) => {
+    if (len <= 4) {
+      return Array.from({ length: len }, () => CHARS[rand(0, 25)]).join("");
+    }
+    if (len <= 8) {
+      const a = pick(ADJ);
+      const b = pick(NOUNS);
+      let s = (a + b).slice(0, len);
+      while (s.length < len) s += CHARS[rand(0, CHARS.length - 1)];
+      return s;
+    }
+    let s = pick(ADJ) + "_" + pick(NOUNS) + rand(0, 99);
+    while (s.length < len) s += CHARS[rand(0, CHARS.length - 1)];
+    return s.slice(0, len);
+  };
+
+  const submitRareLen = async (val: string) => {
+    append({ text: `> ${val}` });
+    const n = parseInt(val.trim(), 10);
+    if (!Number.isFinite(n) || n < 3 || n > 20) {
+      append({ text: "Invalid length. Enter a number between 3 and 20.", color: "var(--terminal-red)" });
+      append({ text: "Username length (3–20):" });
+      return;
+    }
+    setStage("rareScanning");
+    await spinTask(`Initializing rare-name scanner (len=${n})`, 600);
+    await spinTask("Loading dictionary & namespace shards", 700);
+    await spinTask("Connecting to lookup nodes", 650);
+    append({ text: "" });
+    append({ text: `[*] Scanning ${n}-char namespace...`, color: "oklch(0.78 0.16 200)" });
+
+    const found: string[] = [];
+    const target = 8;
+    let attempts = 0;
+    while (found.length < target && attempts < 60) {
+      attempts++;
+      const name = generateName(n);
+      await sleep(110);
+      const ok = Math.random() < 0.45;
+      if (ok) {
+        await typewrite(`  [✓] @${name}  — available`, "oklch(0.85 0.18 140)", 8);
+        found.push(name);
+      } else {
+        await typewrite(`  [✗] @${name}  — taken`, "oklch(0.55 0.04 260)", 6);
+      }
+    }
+    append({ text: "" });
+    await typewrite(`[✓] Scan complete — ${found.length} available handle(s) found.`, "oklch(0.85 0.18 140)", 12);
+    append({ text: "" });
+    found.forEach((f) => append({ text: `   • @${f}`, color: "oklch(0.82 0.20 145)" }));
+    append({ text: "" });
+    append({ text: "Type another length (3–20) or 'menu' to return:" });
+    setStage("askRareLen");
+  };
+
+  const submitMenu = async (val: string) => {
+    const v = val.trim();
+    append({ text: `> ${v}` });
+    if (v === "1" || v.toLowerCase() === "dxxer") {
+      setTool("dxxer");
+      append({ text: "" });
+      await typewrite("» Launching Dxxer...", "oklch(0.78 0.16 200)", 14);
+      await spinTask("Initialized secure transfer protocol", 500);
+      append({ text: "Supported endpoints: Discord webhooks, Netlify build hooks.", color: "oklch(0.65 0.04 260)" });
+      append({ text: "" });
+      append({ text: "Please enter your webhook URL (Discord or Netlify):" });
+      setStage("askWebhook");
+    } else if (v === "2" || v.toLowerCase().startsWith("rare")) {
+      setTool("rare");
+      append({ text: "" });
+      await typewrite("» Launching Rare Username Finder...", "oklch(0.78 0.16 200)", 14);
+      await spinTask("Booting namespace probe", 500);
+      append({ text: "" });
+      append({ text: "Username length (3–20):" });
+      setStage("askRareLen");
+    } else {
+      append({ text: "Unknown selection. Type 1 or 2.", color: "var(--terminal-red)" });
+    }
+  };
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
     const val = input;
     setInput("");
-    if (stage === "askWebhook") submitWebhook(val);
+    // global "menu" command
+    if (val.trim().toLowerCase() === "menu" && (stage === "askVictim" || stage === "askRareLen" || stage === "askWebhook")) {
+      append({ text: `> menu` });
+      append({ text: "" });
+      showMenu();
+      return;
+    }
+    if (stage === "menu") submitMenu(val);
+    else if (stage === "askWebhook") submitWebhook(val);
     else if (stage === "confirm") submitConfirm(val);
     else if (stage === "askVictim") submitVictim(val);
+    else if (stage === "askRareLen") submitRareLen(val);
   };
 
   const prompt =
+    stage === "menu" ? "high>" :
     stage === "askWebhook" ? "webhook>" :
     stage === "confirm" ? "(y/n)>" :
-    stage === "askVictim" ? "target>" : "$";
-  const showInput = stage === "askWebhook" || stage === "confirm" || stage === "askVictim";
-  const busy = stage === "validating" || stage === "searching" || stage === "sending";
+    stage === "askVictim" ? "target>" :
+    stage === "askRareLen" ? "len>" : "$";
+  const showInput =
+    stage === "menu" ||
+    stage === "askWebhook" ||
+    stage === "confirm" ||
+    stage === "askVictim" ||
+    stage === "askRareLen";
+  const busy = stage === "validating" || stage === "searching" || stage === "sending" || stage === "rareScanning";
 
   return (
     <div
@@ -359,10 +511,10 @@ export function FullscreenTerminal() {
       >
         <div className="flex items-center gap-2">
           <span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--terminal-red)", boxShadow: "0 0 8px var(--terminal-red)" }} />
-          <span>dexbin@terminal</span>
+          <span>high@terminal</span>
           <span className="opacity-50">— /root</span>
         </div>
-        <div className="opacity-70">secure-tty • {provider}</div>
+        <div className="opacity-70">secure-tty • {tool ?? "menu"}</div>
       </div>
 
       {/* Centered banner */}
@@ -370,8 +522,8 @@ export function FullscreenTerminal() {
         <pre
           className="m-0 text-center font-mono text-[10px] leading-[1.05] sm:text-[11px] md:text-[12px]"
           style={{
-            color: "var(--terminal-red)",
-            textShadow: "0 0 10px oklch(0.55 0.22 25 / 0.6), 0 0 24px oklch(0.55 0.22 25 / 0.25)",
+            color: "oklch(0.82 0.22 145)",
+            textShadow: "0 0 10px oklch(0.65 0.22 145 / 0.7), 0 0 24px oklch(0.65 0.22 145 / 0.3)",
             whiteSpace: "pre",
           }}
         >
@@ -383,7 +535,7 @@ export function FullscreenTerminal() {
           className="relative z-10 border-b py-1 text-center text-[10px] tracking-[0.4em]"
           style={{ borderColor: "oklch(1 0 0 / 0.06)", color: "oklch(0.65 0.04 260)" }}
         >
-          ── DEXBIN v1.0 ──
+          ── HIGH v2.0 ──
         </div>
       )}
 
