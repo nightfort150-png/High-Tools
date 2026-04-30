@@ -739,7 +739,7 @@ export function FullscreenTerminal() {
         className="relative z-10 flex flex-wrap items-center justify-center gap-4 border-b px-3 pb-3 pt-4 md:gap-8"
         style={{ borderColor: "oklch(1 0 0 / 0.06)" }}
       >
-        <pre
+        {mounted && <pre
           aria-hidden
           className="m-0 hidden font-mono leading-[1] md:block"
           style={{
@@ -751,7 +751,7 @@ export function FullscreenTerminal() {
           }}
         >
 {LEAF}
-        </pre>
+        </pre>}
         <pre
           className="m-0 text-center font-mono text-[10px] leading-[1.05] sm:text-[11px] md:text-[14px]"
           style={{
@@ -760,9 +760,9 @@ export function FullscreenTerminal() {
             whiteSpace: "pre",
           }}
         >
-{bannerLinesShown.join("\n")}{!bannerDone && <span className="terminal-cursor">█</span>}
+{mounted ? bannerLinesShown.join("\n") : ""}{mounted && !bannerDone && <span className="terminal-cursor">█</span>}
         </pre>
-        <pre
+        {mounted && <pre
           aria-hidden
           className="m-0 hidden font-mono leading-[1] md:block"
           style={{
@@ -775,7 +775,7 @@ export function FullscreenTerminal() {
           }}
         >
 {LEAF}
-        </pre>
+        </pre>}
       </div>
       {bannerDone && (
         <div
