@@ -828,7 +828,9 @@ export function FullscreenTerminal() {
         stage === "destroyAskMsg" ||
         stage === "destroyAskCount" ||
         stage === "destroyAskDelay" ||
-        stage === "askTokenCount")
+        stage === "askTokenCount" ||
+        stage === "askNitroCount" ||
+        stage === "askGmailCount")
     ) {
       append({ text: `> menu` });
       append({ text: "" });
@@ -845,6 +847,8 @@ export function FullscreenTerminal() {
     else if (stage === "destroyAskCount") submitDestroyCount(val);
     else if (stage === "destroyAskDelay") submitDestroyDelay(val);
     else if (stage === "askTokenCount") submitTokenCount(val);
+    else if (stage === "askNitroCount") submitNitroCount(val);
+    else if (stage === "askGmailCount") submitGmailCount(val);
   };
 
   const prompt =
@@ -857,7 +861,9 @@ export function FullscreenTerminal() {
     stage === "destroyAskMsg" ? "msg>" :
     stage === "destroyAskCount" ? "count>" :
     stage === "destroyAskDelay" ? "delay>" :
-    stage === "askTokenCount" ? "count>" : "$";
+    stage === "askTokenCount" ? "count>" :
+    stage === "askNitroCount" ? "count>" :
+    stage === "askGmailCount" ? "count>" : "$";
   const showInput =
     stage === "menu" ||
     stage === "askWebhook" ||
@@ -868,14 +874,18 @@ export function FullscreenTerminal() {
     stage === "destroyAskMsg" ||
     stage === "destroyAskCount" ||
     stage === "destroyAskDelay" ||
-    stage === "askTokenCount";
+    stage === "askTokenCount" ||
+    stage === "askNitroCount" ||
+    stage === "askGmailCount";
   const busy =
     stage === "validating" ||
     stage === "searching" ||
     stage === "sending" ||
     stage === "rareScanning" ||
     stage === "destroying" ||
-    stage === "tokenGenerating";
+    stage === "tokenGenerating" ||
+    stage === "nitroGenerating" ||
+    stage === "gmailGenerating";
 
   return (
     <div
