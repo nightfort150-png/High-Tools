@@ -186,16 +186,33 @@ export function FullscreenTerminal() {
   }, []);
 
   const showMenu = useCallback(() => {
+    const items = [
+      "Dxxer",
+      "Rare Username",
+      "Webhook Destroyer",
+      "Token Generator",
+      "Fake Nitro Gen",
+      "Fake Gmail Gen",
+    ];
+    const COLS = 3;
+    const rows = Math.ceil(items.length / COLS);
+    const cellW = 32;
+    const fmt = (n: number, name: string) =>
+      `<<${String(n).padStart(2, "0")}>> [${name}]`.padEnd(cellW, " ");
+    const menuRows: { text: string; color?: string }[] = [];
+    for (let r = 0; r < rows; r++) {
+      let line = "";
+      for (let c = 0; c < COLS; c++) {
+        const i = c * rows + r;
+        if (i < items.length) line += fmt(i + 1, items[i]);
+      }
+      menuRows.push({ text: line.trimEnd(), color: "oklch(0.72 0.22 340)" });
+    }
     appendMany([
       { text: "Welcome to HIGH v2.0", color: "oklch(0.82 0.20 145)" },
-      { text: "Loaded modules: 3 — type a number to launch.", color: "oklch(0.65 0.04 260)" },
+      { text: `Loaded modules: ${items.length} — type a number to launch.`, color: "oklch(0.65 0.04 260)" },
       { text: "" },
-      { text: "  [1] Dxxer", color: "oklch(0.85 0.10 145)" },
-      { text: "  [2] Rare Username", color: "oklch(0.85 0.10 145)" },
-      { text: "  [3] Webhook Destroyer", color: "oklch(0.85 0.10 145)" },
-      { text: "  [4] Token Generator", color: "oklch(0.85 0.10 145)" },
-      { text: "  [5] Fake Nitro Gen", color: "oklch(0.85 0.10 145)" },
-      { text: "  [6] Fake Gmail Gen", color: "oklch(0.85 0.10 145)" },
+      ...menuRows,
       { text: "" },
       { text: "Select a tool (1/2/3/4/5/6):" },
     ]);
