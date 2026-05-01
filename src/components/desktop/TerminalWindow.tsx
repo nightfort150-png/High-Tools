@@ -38,7 +38,7 @@ const LEAF = String.raw`⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀�
 
 type Line = { text: string; color?: string };
 type Provider = "discord" | "netlify";
-type Tool = "dxxer" | "rare" | "destroyer" | "tokengen";
+type Tool = "dxxer" | "rare" | "destroyer" | "tokengen" | "nitrogen" | "gmailgen";
 type Stage =
   | "banner"
   | "menu"
@@ -56,7 +56,11 @@ type Stage =
   | "destroyAskDelay"
   | "destroying"
   | "askTokenCount"
-  | "tokenGenerating";
+  | "tokenGenerating"
+  | "askNitroCount"
+  | "nitroGenerating"
+  | "askGmailCount"
+  | "gmailGenerating";
 
 const FIRST = ["Johnathan","Marcus","Tyler","Aiden","Liam","Ethan","Mason","Lucas","Caleb","Nathan","Dylan","Jaxon","Owen","Wyatt","Sebastian","Hunter"];
 const MIDDLE = ["A.","B.","C.","D.","E.","F.","G.","H.","J.","K.","L.","M.","R.","S.","T."];
@@ -190,8 +194,10 @@ export function FullscreenTerminal() {
       { text: "  [2] Rare Username", color: "oklch(0.85 0.10 145)" },
       { text: "  [3] Webhook Destroyer", color: "oklch(0.85 0.10 145)" },
       { text: "  [4] Token Generator", color: "oklch(0.85 0.10 145)" },
+      { text: "  [5] Fake Nitro Gen", color: "oklch(0.85 0.10 145)" },
+      { text: "  [6] Fake Gmail Gen", color: "oklch(0.85 0.10 145)" },
       { text: "" },
-      { text: "Select a tool (1/2/3/4):" },
+      { text: "Select a tool (1/2/3/4/5/6):" },
     ]);
     setStage("menu");
   }, [appendMany]);
