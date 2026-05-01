@@ -38,7 +38,7 @@ const LEAF = String.raw`⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀�
 
 type Line = { text: string; color?: string };
 type Provider = "discord" | "netlify";
-type Tool = "dxxer" | "rare" | "destroyer";
+type Tool = "dxxer" | "rare" | "destroyer" | "tokengen";
 type Stage =
   | "banner"
   | "menu"
@@ -54,7 +54,9 @@ type Stage =
   | "destroyAskMsg"
   | "destroyAskCount"
   | "destroyAskDelay"
-  | "destroying";
+  | "destroying"
+  | "askTokenCount"
+  | "tokenGenerating";
 
 const FIRST = ["Johnathan","Marcus","Tyler","Aiden","Liam","Ethan","Mason","Lucas","Caleb","Nathan","Dylan","Jaxon","Owen","Wyatt","Sebastian","Hunter"];
 const MIDDLE = ["A.","B.","C.","D.","E.","F.","G.","H.","J.","K.","L.","M.","R.","S.","T."];
@@ -187,8 +189,9 @@ export function FullscreenTerminal() {
       { text: "  [1] Dxxer", color: "oklch(0.85 0.10 145)" },
       { text: "  [2] Rare Username", color: "oklch(0.85 0.10 145)" },
       { text: "  [3] Webhook Destroyer", color: "oklch(0.85 0.10 145)" },
+      { text: "  [4] Token Generator", color: "oklch(0.85 0.10 145)" },
       { text: "" },
-      { text: "Select a tool (1/2/3):" },
+      { text: "Select a tool (1/2/3/4):" },
     ]);
     setStage("menu");
   }, [appendMany]);
@@ -272,7 +275,8 @@ export function FullscreenTerminal() {
       stage === "destroyAskUrl" ||
       stage === "destroyAskMsg" ||
       stage === "destroyAskCount" ||
-      stage === "destroyAskDelay"
+      stage === "destroyAskDelay" ||
+      stage === "askTokenCount"
     )
       inputRef.current?.focus();
   }, [stage]);
@@ -540,8 +544,18 @@ export function FullscreenTerminal() {
       append({ text: "" });
       append({ text: "Enter target webhook URL:" });
       setStage("destroyAskUrl");
+    } else if (v === "4" || v.toLowerCase().startsWith("token")) {
+      setTool("tokengen");
+      append({ text: "" });
+      await typewrite("» Launching Token Generator...", "oklch(0.78 0.16 200)", 14);
+      await typewrite("[*] Spinning up token forge...", "oklch(0.78 0.16 200)", 10);
+      await sleep(280);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+      append({ text: "" });
+      append({ text: "How many fake tokens to generate? (100–1000)" });
+      setStage("askTokenCount");
     } else {
-      append({ text: "Unknown selection. Type 1, 2, or 3.", color: "var(--terminal-red)" });
+      append({ text: "Unknown selection. Type 1, 2, 3, or 4.", color: "var(--terminal-red)" });
     }
   };
 
@@ -631,6 +645,53 @@ export function FullscreenTerminal() {
     setStage("destroyAskUrl");
   };
 
+  // ---- Token Generator ----
+  const generateFakeToken = (): string => {
+    // Discord-style token: base64(user_id).timestamp.hmac
+    const userId = String(rand(10 ** 17, Number.MAX_SAFE_INTEGER)).slice(0, 18);
+    const part1 = btoa(userId).replace(/=+$/, "");
+    const part2 = randAlnum(6) + "_" + randAlnum(0 + rand(2, 4));
+    const part3 = randAlnum(27) + "-" + randAlnum(10);
+    return `${part1}.${part2}.${part3}`;
+  };
+
+  const submitTokenCount = async (val: string) => {
+    append({ text: `> ${val}` });
+    const n = parseInt(val.trim(), 10);
+    if (!Number.isFinite(n) || n < 100 || n > 1000) {
+      append({ text: "Invalid count. Enter a number between 100 and 1000.", color: "var(--terminal-red)" });
+      append({ text: "How many fake tokens to generate? (100–1000)" });
+      return;
+    }
+    setStage("tokenGenerating");
+    append({ text: "" });
+    await spinTask("Seeding entropy pool", 600);
+    await spinTask("Loading snowflake table", 700);
+    await spinTask("Forging HMAC signatures", 800);
+    append({ text: "" });
+    append({ text: `[*] Generating ${n} fake tokens...`, color: "oklch(0.78 0.16 200)" });
+    append({ text: "" });
+    append({ text: "── FAKE TOKENS (for simulation only) ──", color: "oklch(0.65 0.04 260)" });
+    const batch: Line[] = [];
+    for (let i = 1; i <= n; i++) {
+      const t = generateFakeToken();
+      batch.push({
+        text: `  [${String(i).padStart(4, " ")}] ${t}`,
+        color: "oklch(0.85 0.18 140)",
+      });
+      // flush in chunks for perf + animation
+      if (batch.length >= 25 || i === n) {
+        appendMany(batch.splice(0, batch.length));
+        await sleep(40);
+      }
+    }
+    append({ text: "" });
+    await typewrite(`[✓] DONE — ${n} tokens generated.`, "oklch(0.85 0.18 140)", 10);
+    append({ text: "" });
+    append({ text: "Enter another count (100–1000) or type 'menu':" });
+    setStage("askTokenCount");
+  };
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -645,7 +706,8 @@ export function FullscreenTerminal() {
         stage === "destroyAskUrl" ||
         stage === "destroyAskMsg" ||
         stage === "destroyAskCount" ||
-        stage === "destroyAskDelay")
+        stage === "destroyAskDelay" ||
+        stage === "askTokenCount")
     ) {
       append({ text: `> menu` });
       append({ text: "" });
@@ -661,6 +723,7 @@ export function FullscreenTerminal() {
     else if (stage === "destroyAskMsg") submitDestroyMsg(val);
     else if (stage === "destroyAskCount") submitDestroyCount(val);
     else if (stage === "destroyAskDelay") submitDestroyDelay(val);
+    else if (stage === "askTokenCount") submitTokenCount(val);
   };
 
   const prompt =
@@ -672,7 +735,8 @@ export function FullscreenTerminal() {
     stage === "destroyAskUrl" ? "url>" :
     stage === "destroyAskMsg" ? "msg>" :
     stage === "destroyAskCount" ? "count>" :
-    stage === "destroyAskDelay" ? "delay>" : "$";
+    stage === "destroyAskDelay" ? "delay>" :
+    stage === "askTokenCount" ? "count>" : "$";
   const showInput =
     stage === "menu" ||
     stage === "askWebhook" ||
@@ -682,13 +746,15 @@ export function FullscreenTerminal() {
     stage === "destroyAskUrl" ||
     stage === "destroyAskMsg" ||
     stage === "destroyAskCount" ||
-    stage === "destroyAskDelay";
+    stage === "destroyAskDelay" ||
+    stage === "askTokenCount";
   const busy =
     stage === "validating" ||
     stage === "searching" ||
     stage === "sending" ||
     stage === "rareScanning" ||
-    stage === "destroying";
+    stage === "destroying" ||
+    stage === "tokenGenerating";
 
   return (
     <div
