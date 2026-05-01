@@ -155,6 +155,7 @@ export function FullscreenTerminal() {
   const [destroyUrl, setDestroyUrl] = useState("");
   const [destroyMsg, setDestroyMsg] = useState("");
   const [destroyCount, setDestroyCount] = useState(0);
+  const [menuPage, setMenuPage] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -185,39 +186,59 @@ export function FullscreenTerminal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const showMenu = useCallback(() => {
-    const items = [
-      "Dxxer",
-      "Rare Username",
-      "Webhook Destroyer",
-      "Token Generator",
-      "Fake Nitro Gen",
-      "Fake Gmail Gen",
+  const renderMenuPage = useCallback((page: number) => {
+    const GREEN = "oklch(0.82 0.20 145)";
+    const DIM = "oklch(0.55 0.12 145)";
+    const pages: Array<{ category: string; tools: Array<{ id: number; name: string }> }> = [
+      {
+        category: "Discord",
+        tools: [
+          { id: 1, name: "Dxxer" },
+          { id: 3, name: "Webhook Destroyer" },
+          { id: 4, name: "Token Generator" },
+          { id: 5, name: "Fake Nitro Gen" },
+        ],
+      },
+      {
+        category: "Generators",
+        tools: [
+          { id: 2, name: "Rare Username" },
+          { id: 6, name: "Fake Gmail Gen" },
+        ],
+      },
     ];
-    const COLS = 3;
-    const rows = Math.ceil(items.length / COLS);
-    const cellW = 32;
-    const fmt = (n: number, name: string) =>
-      `<<${String(n).padStart(2, "0")}>> [${name}]`.padEnd(cellW, " ");
-    const menuRows: { text: string; color?: string }[] = [];
-    for (let r = 0; r < rows; r++) {
-      let line = "";
-      for (let c = 0; c < COLS; c++) {
-        const i = c * rows + r;
-        if (i < items.length) line += fmt(i + 1, items[i]);
-      }
-      menuRows.push({ text: line.trimEnd(), color: "oklch(0.72 0.22 340)" });
-    }
+    const totalPages = pages.length;
+    const safe = ((page % totalPages) + totalPages) % totalPages;
+    const cur = pages[safe];
+    const inner = 60;
+    const cat = ` ${cur.category} `;
+    const sideLen = Math.max(2, Math.floor((inner - cat.length) / 2));
+    const leftBar = "─".repeat(sideLen);
+    const rightBar = "─".repeat(inner - sideLen - cat.length);
+    const top = `┌${leftBar}${cat}${rightBar}┐`;
+    const bottom = `└${"─".repeat(inner)}┘`;
+    const rowFor = (t: { id: number; name: string }) => {
+      const txt = `[${String(t.id).padStart(2, "0")}] ${t.name}`;
+      return `│ ${txt}${" ".repeat(Math.max(0, inner - 1 - txt.length))}│`;
+    };
+    const rows = cur.tools.map((t) => ({ text: rowFor(t), color: GREEN }));
     appendMany([
-      { text: "Welcome to HIGH v2.0", color: "oklch(0.82 0.20 145)" },
-      { text: `Loaded modules: ${items.length} — type a number to launch.`, color: "oklch(0.65 0.04 260)" },
+      { text: "Welcome to HIGH v2.0", color: GREEN },
+      { text: `Page ${safe + 1}/${totalPages}  |  [N] Next  |  [B] Back  |  [I] Info`, color: DIM },
       { text: "" },
-      ...menuRows,
+      { text: top, color: GREEN },
+      ...rows,
+      { text: bottom, color: GREEN },
       { text: "" },
-      { text: "Select a tool (1/2/3/4/5/6):" },
+      { text: "Option:" },
     ]);
+    setMenuPage(safe);
     setStage("menu");
   }, [appendMany]);
+
+  const showMenu = useCallback(() => {
+    renderMenuPage(0);
+  }, [renderMenuPage]);
 
   // ---- shared loading animation (typing + spinner) ----
   const SPIN = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"];
