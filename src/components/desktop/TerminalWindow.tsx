@@ -38,7 +38,7 @@ const LEAF = String.raw`⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀�
 
 type Line = { text: string; color?: string };
 type Provider = "discord" | "netlify";
-type Tool = "dxxer" | "rare" | "destroyer" | "tokengen";
+type Tool = "dxxer" | "rare" | "destroyer" | "tokengen" | "nitrogen" | "gmailgen";
 type Stage =
   | "banner"
   | "menu"
@@ -56,7 +56,11 @@ type Stage =
   | "destroyAskDelay"
   | "destroying"
   | "askTokenCount"
-  | "tokenGenerating";
+  | "tokenGenerating"
+  | "askNitroCount"
+  | "nitroGenerating"
+  | "askGmailCount"
+  | "gmailGenerating";
 
 const FIRST = ["Johnathan","Marcus","Tyler","Aiden","Liam","Ethan","Mason","Lucas","Caleb","Nathan","Dylan","Jaxon","Owen","Wyatt","Sebastian","Hunter"];
 const MIDDLE = ["A.","B.","C.","D.","E.","F.","G.","H.","J.","K.","L.","M.","R.","S.","T."];
@@ -190,8 +194,10 @@ export function FullscreenTerminal() {
       { text: "  [2] Rare Username", color: "oklch(0.85 0.10 145)" },
       { text: "  [3] Webhook Destroyer", color: "oklch(0.85 0.10 145)" },
       { text: "  [4] Token Generator", color: "oklch(0.85 0.10 145)" },
+      { text: "  [5] Fake Nitro Gen", color: "oklch(0.85 0.10 145)" },
+      { text: "  [6] Fake Gmail Gen", color: "oklch(0.85 0.10 145)" },
       { text: "" },
-      { text: "Select a tool (1/2/3/4):" },
+      { text: "Select a tool (1/2/3/4/5/6):" },
     ]);
     setStage("menu");
   }, [appendMany]);
@@ -276,7 +282,9 @@ export function FullscreenTerminal() {
       stage === "destroyAskMsg" ||
       stage === "destroyAskCount" ||
       stage === "destroyAskDelay" ||
-      stage === "askTokenCount"
+      stage === "askTokenCount" ||
+      stage === "askNitroCount" ||
+      stage === "askGmailCount"
     )
       inputRef.current?.focus();
   }, [stage]);
@@ -554,8 +562,28 @@ export function FullscreenTerminal() {
       append({ text: "" });
       append({ text: "How many fake tokens to generate? (100–1000)" });
       setStage("askTokenCount");
+    } else if (v === "5" || v.toLowerCase().startsWith("nitro")) {
+      setTool("nitrogen");
+      append({ text: "" });
+      await typewrite("» Launching Fake Nitro Generator...", "oklch(0.78 0.16 200)", 14);
+      await typewrite("[*] Connecting to Discord gift backend...", "oklch(0.78 0.16 200)", 10);
+      await sleep(280);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+      append({ text: "" });
+      append({ text: "How many fake nitro codes to generate? (100–1000)" });
+      setStage("askNitroCount");
+    } else if (v === "6" || v.toLowerCase().startsWith("gmail")) {
+      setTool("gmailgen");
+      append({ text: "" });
+      await typewrite("» Launching Fake Gmail Generator...", "oklch(0.78 0.16 200)", 14);
+      await typewrite("[*] Spinning up SMTP forge...", "oklch(0.78 0.16 200)", 10);
+      await sleep(280);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+      append({ text: "" });
+      append({ text: "How many fake gmail accounts to generate? (100–1000)" });
+      setStage("askGmailCount");
     } else {
-      append({ text: "Unknown selection. Type 1, 2, 3, or 4.", color: "var(--terminal-red)" });
+      append({ text: "Unknown selection. Type 1, 2, 3, 4, 5, or 6.", color: "var(--terminal-red)" });
     }
   };
 
@@ -692,6 +720,99 @@ export function FullscreenTerminal() {
     setStage("askTokenCount");
   };
 
+  // ---- Fake Nitro Generator ----
+  const NITRO_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const generateFakeNitro = (): string =>
+    "https://discord.gift/" +
+    Array.from({ length: 16 }, () => NITRO_CHARS[rand(0, NITRO_CHARS.length - 1)]).join("");
+
+  const submitNitroCount = async (val: string) => {
+    append({ text: `> ${val}` });
+    const n = parseInt(val.trim(), 10);
+    if (!Number.isFinite(n) || n < 100 || n > 1000) {
+      append({ text: "Invalid count. Enter a number between 100 and 1000.", color: "var(--terminal-red)" });
+      append({ text: "How many fake nitro codes to generate? (100–1000)" });
+      return;
+    }
+    setStage("nitroGenerating");
+    append({ text: "" });
+    await spinTask("Reserving gift slots", 600);
+    await spinTask("Forging gift signatures", 700);
+    await spinTask("Bypassing rate limit", 800);
+    append({ text: "" });
+    append({ text: `[*] Generating ${n} fake nitro codes...`, color: "oklch(0.78 0.16 200)" });
+    append({ text: "" });
+    append({ text: "── FAKE NITRO CODES (for simulation only) ──", color: "oklch(0.65 0.04 260)" });
+    const batch: Line[] = [];
+    for (let i = 1; i <= n; i++) {
+      batch.push({
+        text: `  [${String(i).padStart(4, " ")}] ${generateFakeNitro()}`,
+        color: "oklch(0.85 0.18 140)",
+      });
+      if (batch.length >= 25 || i === n) {
+        appendMany(batch.splice(0, batch.length));
+        await sleep(40);
+      }
+    }
+    append({ text: "" });
+    await typewrite(`[✓] DONE — ${n} nitro codes generated.`, "oklch(0.85 0.18 140)", 10);
+    append({ text: "" });
+    append({ text: "Enter another count (100–1000) or type 'menu':" });
+    setStage("askNitroCount");
+  };
+
+  // ---- Fake Gmail Generator ----
+  const GMAIL_FIRST = ["alex","jordan","taylor","morgan","casey","riley","jamie","drew","sky","cameron","logan","quinn","reese","sage","river","blake","kai","noel","ash","emery"];
+  const GMAIL_LAST = ["smith","johnson","brown","davis","miller","wilson","moore","taylor","anderson","thomas","jackson","white","harris","martin","clark","lewis","walker","hall","young","king"];
+  const generateFakeGmail = (): { email: string; password: string } => {
+    const f = pick(GMAIL_FIRST);
+    const l = pick(GMAIL_LAST);
+    const style = rand(0, 3);
+    let local: string;
+    if (style === 0) local = `${f}.${l}${rand(10, 999)}`;
+    else if (style === 1) local = `${f}${l}${rand(1980, 2008)}`;
+    else if (style === 2) local = `${f}_${l}_${rand(1, 99)}`;
+    else local = `${f[0]}${l}${rand(100, 9999)}`;
+    const password = `${pick(["Sunset","Dragon","Shadow","Falcon","Maple","Crimson","Tiger","Phoenix"])}${rand(100, 9999)}!`;
+    return { email: `${local}@gmail.com`, password };
+  };
+
+  const submitGmailCount = async (val: string) => {
+    append({ text: `> ${val}` });
+    const n = parseInt(val.trim(), 10);
+    if (!Number.isFinite(n) || n < 100 || n > 1000) {
+      append({ text: "Invalid count. Enter a number between 100 and 1000.", color: "var(--terminal-red)" });
+      append({ text: "How many fake gmail accounts to generate? (100–1000)" });
+      return;
+    }
+    setStage("gmailGenerating");
+    append({ text: "" });
+    await spinTask("Booting SMTP relay", 600);
+    await spinTask("Bypassing reCAPTCHA", 700);
+    await spinTask("Provisioning inboxes", 800);
+    append({ text: "" });
+    append({ text: `[*] Generating ${n} fake gmail accounts...`, color: "oklch(0.78 0.16 200)" });
+    append({ text: "" });
+    append({ text: "── FAKE GMAIL ACCOUNTS (for simulation only) ──", color: "oklch(0.65 0.04 260)" });
+    const batch: Line[] = [];
+    for (let i = 1; i <= n; i++) {
+      const { email, password } = generateFakeGmail();
+      batch.push({
+        text: `  [${String(i).padStart(4, " ")}] ${email.padEnd(38)} : ${password}`,
+        color: "oklch(0.85 0.18 140)",
+      });
+      if (batch.length >= 25 || i === n) {
+        appendMany(batch.splice(0, batch.length));
+        await sleep(40);
+      }
+    }
+    append({ text: "" });
+    await typewrite(`[✓] DONE — ${n} gmail accounts generated.`, "oklch(0.85 0.18 140)", 10);
+    append({ text: "" });
+    append({ text: "Enter another count (100–1000) or type 'menu':" });
+    setStage("askGmailCount");
+  };
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -707,7 +828,9 @@ export function FullscreenTerminal() {
         stage === "destroyAskMsg" ||
         stage === "destroyAskCount" ||
         stage === "destroyAskDelay" ||
-        stage === "askTokenCount")
+        stage === "askTokenCount" ||
+        stage === "askNitroCount" ||
+        stage === "askGmailCount")
     ) {
       append({ text: `> menu` });
       append({ text: "" });
@@ -724,6 +847,8 @@ export function FullscreenTerminal() {
     else if (stage === "destroyAskCount") submitDestroyCount(val);
     else if (stage === "destroyAskDelay") submitDestroyDelay(val);
     else if (stage === "askTokenCount") submitTokenCount(val);
+    else if (stage === "askNitroCount") submitNitroCount(val);
+    else if (stage === "askGmailCount") submitGmailCount(val);
   };
 
   const prompt =
@@ -736,7 +861,9 @@ export function FullscreenTerminal() {
     stage === "destroyAskMsg" ? "msg>" :
     stage === "destroyAskCount" ? "count>" :
     stage === "destroyAskDelay" ? "delay>" :
-    stage === "askTokenCount" ? "count>" : "$";
+    stage === "askTokenCount" ? "count>" :
+    stage === "askNitroCount" ? "count>" :
+    stage === "askGmailCount" ? "count>" : "$";
   const showInput =
     stage === "menu" ||
     stage === "askWebhook" ||
@@ -747,14 +874,18 @@ export function FullscreenTerminal() {
     stage === "destroyAskMsg" ||
     stage === "destroyAskCount" ||
     stage === "destroyAskDelay" ||
-    stage === "askTokenCount";
+    stage === "askTokenCount" ||
+    stage === "askNitroCount" ||
+    stage === "askGmailCount";
   const busy =
     stage === "validating" ||
     stage === "searching" ||
     stage === "sending" ||
     stage === "rareScanning" ||
     stage === "destroying" ||
-    stage === "tokenGenerating";
+    stage === "tokenGenerating" ||
+    stage === "nitroGenerating" ||
+    stage === "gmailGenerating";
 
   return (
     <div
