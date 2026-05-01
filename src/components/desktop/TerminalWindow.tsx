@@ -645,6 +645,53 @@ export function FullscreenTerminal() {
     setStage("destroyAskUrl");
   };
 
+  // ---- Token Generator ----
+  const generateFakeToken = (): string => {
+    // Discord-style token: base64(user_id).timestamp.hmac
+    const userId = String(rand(10 ** 17, Number.MAX_SAFE_INTEGER)).slice(0, 18);
+    const part1 = btoa(userId).replace(/=+$/, "");
+    const part2 = randAlnum(6) + "_" + randAlnum(0 + rand(2, 4));
+    const part3 = randAlnum(27) + "-" + randAlnum(10);
+    return `${part1}.${part2}.${part3}`;
+  };
+
+  const submitTokenCount = async (val: string) => {
+    append({ text: `> ${val}` });
+    const n = parseInt(val.trim(), 10);
+    if (!Number.isFinite(n) || n < 100 || n > 1000) {
+      append({ text: "Invalid count. Enter a number between 100 and 1000.", color: "var(--terminal-red)" });
+      append({ text: "How many fake tokens to generate? (100–1000)" });
+      return;
+    }
+    setStage("tokenGenerating");
+    append({ text: "" });
+    await spinTask("Seeding entropy pool", 600);
+    await spinTask("Loading snowflake table", 700);
+    await spinTask("Forging HMAC signatures", 800);
+    append({ text: "" });
+    append({ text: `[*] Generating ${n} fake tokens...`, color: "oklch(0.78 0.16 200)" });
+    append({ text: "" });
+    append({ text: "── FAKE TOKENS (for simulation only) ──", color: "oklch(0.65 0.04 260)" });
+    const batch: Line[] = [];
+    for (let i = 1; i <= n; i++) {
+      const t = generateFakeToken();
+      batch.push({
+        text: `  [${String(i).padStart(4, " ")}] ${t}`,
+        color: "oklch(0.85 0.18 140)",
+      });
+      // flush in chunks for perf + animation
+      if (batch.length >= 25 || i === n) {
+        appendMany(batch.splice(0, batch.length));
+        await sleep(40);
+      }
+    }
+    append({ text: "" });
+    await typewrite(`[✓] DONE — ${n} tokens generated.`, "oklch(0.85 0.18 140)", 10);
+    append({ text: "" });
+    append({ text: "Enter another count (100–1000) or type 'menu':" });
+    setStage("askTokenCount");
+  };
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
