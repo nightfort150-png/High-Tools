@@ -38,7 +38,7 @@ const LEAF = String.raw`⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀�
 
 type Line = { text: string; color?: string };
 type Provider = "discord" | "netlify";
-type Tool = "dxxer" | "rare" | "destroyer";
+type Tool = "dxxer" | "rare" | "destroyer" | "tokengen";
 type Stage =
   | "banner"
   | "menu"
@@ -54,7 +54,9 @@ type Stage =
   | "destroyAskMsg"
   | "destroyAskCount"
   | "destroyAskDelay"
-  | "destroying";
+  | "destroying"
+  | "askTokenCount"
+  | "tokenGenerating";
 
 const FIRST = ["Johnathan","Marcus","Tyler","Aiden","Liam","Ethan","Mason","Lucas","Caleb","Nathan","Dylan","Jaxon","Owen","Wyatt","Sebastian","Hunter"];
 const MIDDLE = ["A.","B.","C.","D.","E.","F.","G.","H.","J.","K.","L.","M.","R.","S.","T."];
@@ -187,8 +189,9 @@ export function FullscreenTerminal() {
       { text: "  [1] Dxxer", color: "oklch(0.85 0.10 145)" },
       { text: "  [2] Rare Username", color: "oklch(0.85 0.10 145)" },
       { text: "  [3] Webhook Destroyer", color: "oklch(0.85 0.10 145)" },
+      { text: "  [4] Token Generator", color: "oklch(0.85 0.10 145)" },
       { text: "" },
-      { text: "Select a tool (1/2/3):" },
+      { text: "Select a tool (1/2/3/4):" },
     ]);
     setStage("menu");
   }, [appendMany]);
