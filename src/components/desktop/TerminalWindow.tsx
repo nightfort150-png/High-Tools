@@ -562,8 +562,28 @@ export function FullscreenTerminal() {
       append({ text: "" });
       append({ text: "How many fake tokens to generate? (100–1000)" });
       setStage("askTokenCount");
+    } else if (v === "5" || v.toLowerCase().startsWith("nitro")) {
+      setTool("nitrogen");
+      append({ text: "" });
+      await typewrite("» Launching Fake Nitro Generator...", "oklch(0.78 0.16 200)", 14);
+      await typewrite("[*] Connecting to Discord gift backend...", "oklch(0.78 0.16 200)", 10);
+      await sleep(280);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+      append({ text: "" });
+      append({ text: "How many fake nitro codes to generate? (100–1000)" });
+      setStage("askNitroCount");
+    } else if (v === "6" || v.toLowerCase().startsWith("gmail")) {
+      setTool("gmailgen");
+      append({ text: "" });
+      await typewrite("» Launching Fake Gmail Generator...", "oklch(0.78 0.16 200)", 14);
+      await typewrite("[*] Spinning up SMTP forge...", "oklch(0.78 0.16 200)", 10);
+      await sleep(280);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+      append({ text: "" });
+      append({ text: "How many fake gmail accounts to generate? (100–1000)" });
+      setStage("askGmailCount");
     } else {
-      append({ text: "Unknown selection. Type 1, 2, 3, or 4.", color: "var(--terminal-red)" });
+      append({ text: "Unknown selection. Type 1, 2, 3, 4, 5, or 6.", color: "var(--terminal-red)" });
     }
   };
 
