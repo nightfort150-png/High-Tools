@@ -275,7 +275,8 @@ export function FullscreenTerminal() {
       stage === "destroyAskUrl" ||
       stage === "destroyAskMsg" ||
       stage === "destroyAskCount" ||
-      stage === "destroyAskDelay"
+      stage === "destroyAskDelay" ||
+      stage === "askTokenCount"
     )
       inputRef.current?.focus();
   }, [stage]);
