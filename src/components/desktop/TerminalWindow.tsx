@@ -282,7 +282,9 @@ export function FullscreenTerminal() {
       stage === "destroyAskMsg" ||
       stage === "destroyAskCount" ||
       stage === "destroyAskDelay" ||
-      stage === "askTokenCount"
+      stage === "askTokenCount" ||
+      stage === "askNitroCount" ||
+      stage === "askGmailCount"
     )
       inputRef.current?.focus();
   }, [stage]);
