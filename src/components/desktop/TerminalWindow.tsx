@@ -706,7 +706,8 @@ export function FullscreenTerminal() {
         stage === "destroyAskUrl" ||
         stage === "destroyAskMsg" ||
         stage === "destroyAskCount" ||
-        stage === "destroyAskDelay")
+        stage === "destroyAskDelay" ||
+        stage === "askTokenCount")
     ) {
       append({ text: `> menu` });
       append({ text: "" });
@@ -722,6 +723,7 @@ export function FullscreenTerminal() {
     else if (stage === "destroyAskMsg") submitDestroyMsg(val);
     else if (stage === "destroyAskCount") submitDestroyCount(val);
     else if (stage === "destroyAskDelay") submitDestroyDelay(val);
+    else if (stage === "askTokenCount") submitTokenCount(val);
   };
 
   const prompt =
@@ -733,7 +735,8 @@ export function FullscreenTerminal() {
     stage === "destroyAskUrl" ? "url>" :
     stage === "destroyAskMsg" ? "msg>" :
     stage === "destroyAskCount" ? "count>" :
-    stage === "destroyAskDelay" ? "delay>" : "$";
+    stage === "destroyAskDelay" ? "delay>" :
+    stage === "askTokenCount" ? "count>" : "$";
   const showInput =
     stage === "menu" ||
     stage === "askWebhook" ||
@@ -743,13 +746,15 @@ export function FullscreenTerminal() {
     stage === "destroyAskUrl" ||
     stage === "destroyAskMsg" ||
     stage === "destroyAskCount" ||
-    stage === "destroyAskDelay";
+    stage === "destroyAskDelay" ||
+    stage === "askTokenCount";
   const busy =
     stage === "validating" ||
     stage === "searching" ||
     stage === "sending" ||
     stage === "rareScanning" ||
-    stage === "destroying";
+    stage === "destroying" ||
+    stage === "tokenGenerating";
 
   return (
     <div
