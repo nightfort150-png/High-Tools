@@ -562,7 +562,26 @@ export function FullscreenTerminal() {
   const submitMenu = async (val: string) => {
     const v = val.trim();
     append({ text: `> ${v}` });
-    if (v === "1" || v.toLowerCase() === "dxxer") {
+    const lower = v.toLowerCase();
+    if (lower === "n" || lower === "next") {
+      append({ text: "" });
+      renderMenuPage(menuPage + 1);
+      return;
+    }
+    if (lower === "b" || lower === "back") {
+      append({ text: "" });
+      renderMenuPage(menuPage - 1);
+      return;
+    }
+    if (lower === "i" || lower === "info") {
+      append({ text: "" });
+      append({ text: "HIGH v2.0 — multipurpose terminal toolkit.", color: "oklch(0.82 0.20 145)" });
+      append({ text: "Type a tool number to launch, or N/B to flip pages.", color: "oklch(0.55 0.12 145)" });
+      append({ text: "" });
+      append({ text: "Option:" });
+      return;
+    }
+    if (v === "1" || lower === "dxxer") {
       setTool("dxxer");
       append({ text: "" });
       await typewrite("» Launching Dxxer...", "oklch(0.78 0.16 200)", 14);
