@@ -544,8 +544,18 @@ export function FullscreenTerminal() {
       append({ text: "" });
       append({ text: "Enter target webhook URL:" });
       setStage("destroyAskUrl");
+    } else if (v === "4" || v.toLowerCase().startsWith("token")) {
+      setTool("tokengen");
+      append({ text: "" });
+      await typewrite("» Launching Token Generator...", "oklch(0.78 0.16 200)", 14);
+      await typewrite("[*] Spinning up token forge...", "oklch(0.78 0.16 200)", 10);
+      await sleep(280);
+      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
+      append({ text: "" });
+      append({ text: "How many fake tokens to generate? (100–1000)" });
+      setStage("askTokenCount");
     } else {
-      append({ text: "Unknown selection. Type 1, 2, or 3.", color: "var(--terminal-red)" });
+      append({ text: "Unknown selection. Type 1, 2, 3, or 4.", color: "var(--terminal-red)" });
     }
   };
 
