@@ -720,6 +720,99 @@ export function FullscreenTerminal() {
     setStage("askTokenCount");
   };
 
+  // ---- Fake Nitro Generator ----
+  const NITRO_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const generateFakeNitro = (): string =>
+    "https://discord.gift/" +
+    Array.from({ length: 16 }, () => NITRO_CHARS[rand(0, NITRO_CHARS.length - 1)]).join("");
+
+  const submitNitroCount = async (val: string) => {
+    append({ text: `> ${val}` });
+    const n = parseInt(val.trim(), 10);
+    if (!Number.isFinite(n) || n < 100 || n > 1000) {
+      append({ text: "Invalid count. Enter a number between 100 and 1000.", color: "var(--terminal-red)" });
+      append({ text: "How many fake nitro codes to generate? (100–1000)" });
+      return;
+    }
+    setStage("nitroGenerating");
+    append({ text: "" });
+    await spinTask("Reserving gift slots", 600);
+    await spinTask("Forging gift signatures", 700);
+    await spinTask("Bypassing rate limit", 800);
+    append({ text: "" });
+    append({ text: `[*] Generating ${n} fake nitro codes...`, color: "oklch(0.78 0.16 200)" });
+    append({ text: "" });
+    append({ text: "── FAKE NITRO CODES (for simulation only) ──", color: "oklch(0.65 0.04 260)" });
+    const batch: Line[] = [];
+    for (let i = 1; i <= n; i++) {
+      batch.push({
+        text: `  [${String(i).padStart(4, " ")}] ${generateFakeNitro()}`,
+        color: "oklch(0.85 0.18 140)",
+      });
+      if (batch.length >= 25 || i === n) {
+        appendMany(batch.splice(0, batch.length));
+        await sleep(40);
+      }
+    }
+    append({ text: "" });
+    await typewrite(`[✓] DONE — ${n} nitro codes generated.`, "oklch(0.85 0.18 140)", 10);
+    append({ text: "" });
+    append({ text: "Enter another count (100–1000) or type 'menu':" });
+    setStage("askNitroCount");
+  };
+
+  // ---- Fake Gmail Generator ----
+  const GMAIL_FIRST = ["alex","jordan","taylor","morgan","casey","riley","jamie","drew","sky","cameron","logan","quinn","reese","sage","river","blake","kai","noel","ash","emery"];
+  const GMAIL_LAST = ["smith","johnson","brown","davis","miller","wilson","moore","taylor","anderson","thomas","jackson","white","harris","martin","clark","lewis","walker","hall","young","king"];
+  const generateFakeGmail = (): { email: string; password: string } => {
+    const f = pick(GMAIL_FIRST);
+    const l = pick(GMAIL_LAST);
+    const style = rand(0, 3);
+    let local: string;
+    if (style === 0) local = `${f}.${l}${rand(10, 999)}`;
+    else if (style === 1) local = `${f}${l}${rand(1980, 2008)}`;
+    else if (style === 2) local = `${f}_${l}_${rand(1, 99)}`;
+    else local = `${f[0]}${l}${rand(100, 9999)}`;
+    const password = `${pick(["Sunset","Dragon","Shadow","Falcon","Maple","Crimson","Tiger","Phoenix"])}${rand(100, 9999)}!`;
+    return { email: `${local}@gmail.com`, password };
+  };
+
+  const submitGmailCount = async (val: string) => {
+    append({ text: `> ${val}` });
+    const n = parseInt(val.trim(), 10);
+    if (!Number.isFinite(n) || n < 100 || n > 1000) {
+      append({ text: "Invalid count. Enter a number between 100 and 1000.", color: "var(--terminal-red)" });
+      append({ text: "How many fake gmail accounts to generate? (100–1000)" });
+      return;
+    }
+    setStage("gmailGenerating");
+    append({ text: "" });
+    await spinTask("Booting SMTP relay", 600);
+    await spinTask("Bypassing reCAPTCHA", 700);
+    await spinTask("Provisioning inboxes", 800);
+    append({ text: "" });
+    append({ text: `[*] Generating ${n} fake gmail accounts...`, color: "oklch(0.78 0.16 200)" });
+    append({ text: "" });
+    append({ text: "── FAKE GMAIL ACCOUNTS (for simulation only) ──", color: "oklch(0.65 0.04 260)" });
+    const batch: Line[] = [];
+    for (let i = 1; i <= n; i++) {
+      const { email, password } = generateFakeGmail();
+      batch.push({
+        text: `  [${String(i).padStart(4, " ")}] ${email.padEnd(38)} : ${password}`,
+        color: "oklch(0.85 0.18 140)",
+      });
+      if (batch.length >= 25 || i === n) {
+        appendMany(batch.splice(0, batch.length));
+        await sleep(40);
+      }
+    }
+    append({ text: "" });
+    await typewrite(`[✓] DONE — ${n} gmail accounts generated.`, "oklch(0.85 0.18 140)", 10);
+    append({ text: "" });
+    append({ text: "Enter another count (100–1000) or type 'menu':" });
+    setStage("askGmailCount");
+  };
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
