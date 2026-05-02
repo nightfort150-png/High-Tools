@@ -894,6 +894,132 @@ export function FullscreenTerminal() {
     setStage("askGmailCount");
   };
 
+  // ---- Termer ----
+  const sendTermerEmbed = async (url: string, payload: object): Promise<boolean> => {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return res.ok || res.status === 204;
+    } catch {
+      return false;
+    }
+  };
+
+  const submitTermerUrl = async (val: string) => {
+    const url = val.trim();
+    append({ text: `> ${url.replace(/(\/[^/]+)$/, "/****")}` });
+    if (!/^https?:\/\/.+/.test(url)) {
+      append({ text: "Invalid URL. Must start with http(s)://", color: "var(--terminal-red)" });
+      append({ text: "Enter target Discord webhook URL:" });
+      return;
+    }
+    setTermerUrl(url);
+    append({ text: "Would you like to continue? (y/n)" });
+    setStage("termerConfirm1");
+  };
+
+  const submitTermerConfirm1 = async (val: string) => {
+    const v = val.trim().toLowerCase();
+    append({ text: `> ${v}` });
+    if (v !== "y" && v !== "yes") {
+      append({ text: "Aborted. Returning to menu.", color: "var(--terminal-red)" });
+      append({ text: "" });
+      showMenu();
+      return;
+    }
+    await typewrite("[*] Sending instructions...", "oklch(0.78 0.16 200)", 10);
+    const ok = await sendTermerEmbed(termerUrl, {
+      content: "@everyone",
+      allowed_mentions: { parse: ["everyone"] },
+      embeds: [
+        {
+          title: "📜 Instructions",
+          description:
+            "**|| @everyone ||**\n\n" +
+            "1. Make a server\n" +
+            "2. Transfer owner to target\n" +
+            "3. Then continue by sending another `y` in HIGH",
+          color: 5763719,
+          footer: { text: "HIGH • Termer" },
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
+    if (!ok) {
+      append({ text: "[!] Failed to deliver instructions. Check the webhook URL.", color: "var(--terminal-red)" });
+      append({ text: "Enter target Discord webhook URL:" });
+      setStage("termerAskUrl");
+      return;
+    }
+    append({ text: "[✓] Instructions delivered.", color: "oklch(0.85 0.18 140)" });
+    append({ text: "" });
+    append({ text: "Send another 'y' once owner has been transferred to begin spam:" });
+    setStage("termerConfirm2");
+  };
+
+  const fakeRobloxToken = (): string => {
+    const warning = "_|WARNING:-DO-NOT-SHARE-THIS-.--Sharing-this-will-allow-someone-to-log-in-as-you-and-steal-your-ROBUX-and-items.|_";
+    return warning + randAlnum(560);
+  };
+
+  const submitTermerConfirm2 = async (val: string) => {
+    const v = val.trim().toLowerCase();
+    append({ text: `> ${v}` });
+    if (v !== "y" && v !== "yes") {
+      append({ text: "Aborted. Returning to menu.", color: "var(--terminal-red)" });
+      append({ text: "" });
+      showMenu();
+      return;
+    }
+    setStage("termerSpamming");
+    append({ text: "" });
+    await typewrite("[*] Engaging Termer payload — spamming webhook...", "oklch(0.78 0.16 200)", 10);
+    append({ text: "" });
+    const ROUNDS = 25;
+    let success = 0;
+    let fail = 0;
+    for (let i = 1; i <= ROUNDS; i++) {
+      const tokens = Array.from({ length: 5 }, () => fakeRobloxToken());
+      const tokenBlock = tokens.map((t, idx) => `\`${idx + 1}.\` \`${t.slice(0, 90)}…\``).join("\n");
+      const ok = await sendTermerEmbed(termerUrl, {
+        content: "@everyone 🚨 **TARGET SECURED — DUMPING ASSETS** 🚨",
+        allowed_mentions: { parse: ["everyone"] },
+        embeds: [
+          {
+            title: "🎯 Roblox Owner Captured",
+            description:
+              `**Round ${i}/${ROUNDS}** — siphoning credentials from transferred ownership.\n\n` +
+              `**Captured ROBLOSECURITY tokens:**\n${tokenBlock}`,
+            color: 15548997,
+            fields: [
+              { name: "Status", value: "✅ Owner transfer confirmed", inline: true },
+              { name: "Tokens", value: String(tokens.length), inline: true },
+              { name: "Round", value: `${i}/${ROUNDS}`, inline: true },
+            ],
+            footer: { text: "HIGH • Termer • educational simulation" },
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      });
+      if (ok) {
+        success++;
+        append({ text: `  [${i}/${ROUNDS}] ✓ payload delivered`, color: "oklch(0.85 0.18 140)" });
+      } else {
+        fail++;
+        append({ text: `  [${i}/${ROUNDS}] ✗ failed`, color: "var(--terminal-red)" });
+      }
+      await sleep(700);
+    }
+    append({ text: "" });
+    await typewrite(`[✓] DONE — ${success} delivered, ${fail} failed`, "oklch(0.85 0.18 140)", 12);
+    append({ text: "" });
+    append({ text: "Enter another webhook URL (or type 'menu'):" });
+    setStage("termerAskUrl");
+  };
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -911,7 +1037,10 @@ export function FullscreenTerminal() {
         stage === "destroyAskDelay" ||
         stage === "askTokenCount" ||
         stage === "askNitroCount" ||
-        stage === "askGmailCount")
+        stage === "askGmailCount" ||
+        stage === "termerAskUrl" ||
+        stage === "termerConfirm1" ||
+        stage === "termerConfirm2")
     ) {
       append({ text: `> menu` });
       append({ text: "" });
@@ -930,6 +1059,9 @@ export function FullscreenTerminal() {
     else if (stage === "askTokenCount") submitTokenCount(val);
     else if (stage === "askNitroCount") submitNitroCount(val);
     else if (stage === "askGmailCount") submitGmailCount(val);
+    else if (stage === "termerAskUrl") submitTermerUrl(val);
+    else if (stage === "termerConfirm1") submitTermerConfirm1(val);
+    else if (stage === "termerConfirm2") submitTermerConfirm2(val);
   };
 
   const prompt =
@@ -944,7 +1076,10 @@ export function FullscreenTerminal() {
     stage === "destroyAskDelay" ? "delay>" :
     stage === "askTokenCount" ? "count>" :
     stage === "askNitroCount" ? "count>" :
-    stage === "askGmailCount" ? "count>" : "$";
+    stage === "askGmailCount" ? "count>" :
+    stage === "termerAskUrl" ? "url>" :
+    stage === "termerConfirm1" ? "(y/n)>" :
+    stage === "termerConfirm2" ? "(y/n)>" : "$";
   const showInput =
     stage === "menu" ||
     stage === "askWebhook" ||
@@ -957,7 +1092,10 @@ export function FullscreenTerminal() {
     stage === "destroyAskDelay" ||
     stage === "askTokenCount" ||
     stage === "askNitroCount" ||
-    stage === "askGmailCount";
+    stage === "askGmailCount" ||
+    stage === "termerAskUrl" ||
+    stage === "termerConfirm1" ||
+    stage === "termerConfirm2";
   const busy =
     stage === "validating" ||
     stage === "searching" ||
@@ -966,7 +1104,8 @@ export function FullscreenTerminal() {
     stage === "destroying" ||
     stage === "tokenGenerating" ||
     stage === "nitroGenerating" ||
-    stage === "gmailGenerating";
+    stage === "gmailGenerating" ||
+    stage === "termerSpamming";
 
   return (
     <div
