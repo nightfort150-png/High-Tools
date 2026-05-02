@@ -228,58 +228,67 @@ export function FullscreenTerminal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const renderMenuPage = useCallback((page: number) => {
-    const GREEN = "oklch(0.82 0.20 145)";
-    const DIM = "oklch(0.55 0.12 145)";
-    const pages: Array<{ category: string; tools: Array<{ id: number; name: string }> }> = [
-      {
-        category: "Discord",
-        tools: [
-          { id: 1, name: "Dxxer" },
-          { id: 3, name: "Webhook Destroyer" },
-          { id: 4, name: "Token Generator" },
-          { id: 5, name: "Fake Nitro Gen" },
-        ],
-      },
-      {
-        category: "Generators",
-        tools: [
-          { id: 2, name: "Rare Username" },
-          { id: 6, name: "Fake Gmail Gen" },
-        ],
-      },
-    ];
-    const totalPages = pages.length;
-    const safe = ((page % totalPages) + totalPages) % totalPages;
-    const cur = pages[safe];
-    const inner = 60;
-    const cat = ` ${cur.category} `;
-    const sideLen = Math.max(2, Math.floor((inner - cat.length) / 2));
-    const leftBar = "─".repeat(sideLen);
-    const rightBar = "─".repeat(inner - sideLen - cat.length);
-    const top = `┌${leftBar}${cat}${rightBar}┐`;
-    const bottom = `└${"─".repeat(inner)}┘`;
-    const rowFor = (t: { id: number; name: string }) => {
-      const txt = `[${String(t.id).padStart(2, "0")}] ${t.name}`;
-      return `│ ${txt}${" ".repeat(Math.max(0, inner - 1 - txt.length))}│`;
-    };
-    const rows = cur.tools.map((t) => ({ text: rowFor(t), color: GREEN }));
-    appendMany([
-      { text: "Welcome to HIGH v2.0", color: GREEN },
-      { text: `Page ${safe + 1}/${totalPages}  |  [N] Next  |  [B] Back  |  [I] Info`, color: DIM },
-      { text: "" },
-      { text: top, color: GREEN },
-      ...rows,
-      { text: bottom, color: GREEN },
-      { text: "" },
-      { text: "Option:" },
-    ]);
-    setMenuPage(safe);
-    setStage("menu");
-  }, [appendMany]);
+  const drawBox = useCallback(
+    async (title: string, rows: string[], color: string, inner = 60) => {
+      const cat = ` ${title} `;
+      const sideLen = Math.max(2, Math.floor((inner - cat.length) / 2));
+      const leftBar = "─".repeat(sideLen);
+      const rightBar = "─".repeat(inner - sideLen - cat.length);
+      const top = `┌${leftBar}${cat}${rightBar}┐`;
+      const bottom = `└${"─".repeat(inner)}┘`;
+      await drawHLine(top, color, 5);
+      for (const r of rows) {
+        const padded = `│ ${r}${" ".repeat(Math.max(0, inner - 1 - r.length))}│`;
+        await drawBoxRow(padded, color, 3);
+      }
+      await drawHLine(bottom, color, 5);
+    },
+    [drawHLine, drawBoxRow],
+  );
+
+  const renderMenuPage = useCallback(
+    async (page: number) => {
+      const GREEN = "oklch(0.82 0.20 145)";
+      const DIM = "oklch(0.55 0.12 145)";
+      const pages: Array<{ category: string; tools: Array<{ id: number; name: string }> }> = [
+        {
+          category: "Discord",
+          tools: [
+            { id: 1, name: "Dxxer" },
+            { id: 3, name: "Webhook Destroyer" },
+            { id: 4, name: "Token Generator" },
+            { id: 5, name: "Fake Nitro Gen" },
+          ],
+        },
+        {
+          category: "Generators",
+          tools: [
+            { id: 2, name: "Rare Username" },
+            { id: 6, name: "Fake Gmail Gen" },
+          ],
+        },
+      ];
+      const totalPages = pages.length;
+      const safe = ((page % totalPages) + totalPages) % totalPages;
+      const cur = pages[safe];
+      setMenuPage(safe);
+      append({ text: "Welcome to HIGH v2.0", color: GREEN });
+      append({
+        text: `Page ${safe + 1}/${totalPages}  |  [N] Next  |  [B] Back  |  [I] Info`,
+        color: DIM,
+      });
+      append({ text: "" });
+      const rows = cur.tools.map((t) => `[${String(t.id).padStart(2, "0")}] ${t.name}`);
+      await drawBox(cur.category, rows, GREEN, 60);
+      append({ text: "" });
+      append({ text: "Option:" });
+      setStage("menu");
+    },
+    [append, drawBox],
+  );
 
   const showMenu = useCallback(() => {
-    renderMenuPage(0);
+    void renderMenuPage(0);
   }, [renderMenuPage]);
 
   // ---- shared loading animation (typing + spinner) ----
