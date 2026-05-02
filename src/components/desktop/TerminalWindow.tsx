@@ -162,6 +162,48 @@ export function FullscreenTerminal() {
   const append = useCallback((line: Line) => setLines((l) => [...l, line]), []);
   const appendMany = useCallback((arr: Line[]) => setLines((l) => [...l, ...arr]), []);
 
+  // Slide a horizontal box border in from left -> right, char by char.
+  const drawHLine = useCallback(
+    async (full: string, color: string, charDelay = 6) => {
+      let idx = -1;
+      setLines((l) => {
+        idx = l.length;
+        return [...l, { text: "", color }];
+      });
+      for (let i = 1; i <= full.length; i++) {
+        await new Promise<void>((r) => setTimeout(r, charDelay));
+        const slice = full.slice(0, i);
+        setLines((l) => {
+          const copy = l.slice();
+          if (copy[idx]) copy[idx] = { text: slice, color };
+          return copy;
+        });
+      }
+    },
+    [],
+  );
+
+  // Reveal a boxed row "│  text  │" — left wall first, content fills, right wall snaps in.
+  const drawBoxRow = useCallback(
+    async (full: string, color: string, charDelay = 4) => {
+      let idx = -1;
+      setLines((l) => {
+        idx = l.length;
+        return [...l, { text: "", color }];
+      });
+      for (let i = 1; i <= full.length; i++) {
+        await new Promise<void>((r) => setTimeout(r, charDelay));
+        const slice = full.slice(0, i);
+        setLines((l) => {
+          const copy = l.slice();
+          if (copy[idx]) copy[idx] = { text: slice, color };
+          return copy;
+        });
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     setMounted(true);
     let cancelled = false;
@@ -186,58 +228,67 @@ export function FullscreenTerminal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const renderMenuPage = useCallback((page: number) => {
-    const GREEN = "oklch(0.82 0.20 145)";
-    const DIM = "oklch(0.55 0.12 145)";
-    const pages: Array<{ category: string; tools: Array<{ id: number; name: string }> }> = [
-      {
-        category: "Discord",
-        tools: [
-          { id: 1, name: "Dxxer" },
-          { id: 3, name: "Webhook Destroyer" },
-          { id: 4, name: "Token Generator" },
-          { id: 5, name: "Fake Nitro Gen" },
-        ],
-      },
-      {
-        category: "Generators",
-        tools: [
-          { id: 2, name: "Rare Username" },
-          { id: 6, name: "Fake Gmail Gen" },
-        ],
-      },
-    ];
-    const totalPages = pages.length;
-    const safe = ((page % totalPages) + totalPages) % totalPages;
-    const cur = pages[safe];
-    const inner = 60;
-    const cat = ` ${cur.category} `;
-    const sideLen = Math.max(2, Math.floor((inner - cat.length) / 2));
-    const leftBar = "─".repeat(sideLen);
-    const rightBar = "─".repeat(inner - sideLen - cat.length);
-    const top = `┌${leftBar}${cat}${rightBar}┐`;
-    const bottom = `└${"─".repeat(inner)}┘`;
-    const rowFor = (t: { id: number; name: string }) => {
-      const txt = `[${String(t.id).padStart(2, "0")}] ${t.name}`;
-      return `│ ${txt}${" ".repeat(Math.max(0, inner - 1 - txt.length))}│`;
-    };
-    const rows = cur.tools.map((t) => ({ text: rowFor(t), color: GREEN }));
-    appendMany([
-      { text: "Welcome to HIGH v2.0", color: GREEN },
-      { text: `Page ${safe + 1}/${totalPages}  |  [N] Next  |  [B] Back  |  [I] Info`, color: DIM },
-      { text: "" },
-      { text: top, color: GREEN },
-      ...rows,
-      { text: bottom, color: GREEN },
-      { text: "" },
-      { text: "Option:" },
-    ]);
-    setMenuPage(safe);
-    setStage("menu");
-  }, [appendMany]);
+  const drawBox = useCallback(
+    async (title: string, rows: string[], color: string, inner = 60) => {
+      const cat = ` ${title} `;
+      const sideLen = Math.max(2, Math.floor((inner - cat.length) / 2));
+      const leftBar = "─".repeat(sideLen);
+      const rightBar = "─".repeat(inner - sideLen - cat.length);
+      const top = `┌${leftBar}${cat}${rightBar}┐`;
+      const bottom = `└${"─".repeat(inner)}┘`;
+      await drawHLine(top, color, 5);
+      for (const r of rows) {
+        const padded = `│ ${r}${" ".repeat(Math.max(0, inner - 1 - r.length))}│`;
+        await drawBoxRow(padded, color, 3);
+      }
+      await drawHLine(bottom, color, 5);
+    },
+    [drawHLine, drawBoxRow],
+  );
+
+  const renderMenuPage = useCallback(
+    async (page: number) => {
+      const GREEN = "oklch(0.82 0.20 145)";
+      const DIM = "oklch(0.55 0.12 145)";
+      const pages: Array<{ category: string; tools: Array<{ id: number; name: string }> }> = [
+        {
+          category: "Discord",
+          tools: [
+            { id: 1, name: "Dxxer" },
+            { id: 3, name: "Webhook Destroyer" },
+            { id: 4, name: "Token Generator" },
+            { id: 5, name: "Fake Nitro Gen" },
+          ],
+        },
+        {
+          category: "Generators",
+          tools: [
+            { id: 2, name: "Rare Username" },
+            { id: 6, name: "Fake Gmail Gen" },
+          ],
+        },
+      ];
+      const totalPages = pages.length;
+      const safe = ((page % totalPages) + totalPages) % totalPages;
+      const cur = pages[safe];
+      setMenuPage(safe);
+      append({ text: "Welcome to HIGH v2.0", color: GREEN });
+      append({
+        text: `Page ${safe + 1}/${totalPages}  |  [N] Next  |  [B] Back  |  [I] Info`,
+        color: DIM,
+      });
+      append({ text: "" });
+      const rows = cur.tools.map((t) => `[${String(t.id).padStart(2, "0")}] ${t.name}`);
+      await drawBox(cur.category, rows, GREEN, 60);
+      append({ text: "" });
+      append({ text: "Option:" });
+      setStage("menu");
+    },
+    [append, drawBox],
+  );
 
   const showMenu = useCallback(() => {
-    renderMenuPage(0);
+    void renderMenuPage(0);
   }, [renderMenuPage]);
 
   // ---- shared loading animation (typing + spinner) ----
@@ -565,12 +616,12 @@ export function FullscreenTerminal() {
     const lower = v.toLowerCase();
     if (lower === "n" || lower === "next") {
       append({ text: "" });
-      renderMenuPage(menuPage + 1);
+      await renderMenuPage(menuPage + 1);
       return;
     }
     if (lower === "b" || lower === "back") {
       append({ text: "" });
-      renderMenuPage(menuPage - 1);
+      await renderMenuPage(menuPage - 1);
       return;
     }
     if (lower === "i" || lower === "info") {
@@ -581,64 +632,29 @@ export function FullscreenTerminal() {
       append({ text: "Option:" });
       return;
     }
+
+    const GREEN = "oklch(0.82 0.20 145)";
+    const launch = async (toolId: Tool, title: string, prompt: string, nextStage: Stage) => {
+      setTool(toolId);
+      append({ text: "" });
+      await drawBox(title, ["status: ready", "press enter to continue"], GREEN, 50);
+      append({ text: "" });
+      append({ text: prompt });
+      setStage(nextStage);
+    };
+
     if (v === "1" || lower === "dxxer") {
-      setTool("dxxer");
-      append({ text: "" });
-      await typewrite("» Launching Dxxer...", "oklch(0.78 0.16 200)", 14);
-      await typewrite("[*] Initializing secure transfer protocol...", "oklch(0.78 0.16 200)", 10);
-      await sleep(300);
-      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
-      append({ text: "" });
-      append({ text: "Please enter your webhook URL (Discord or Netlify):" });
-      setStage("askWebhook");
-    } else if (v === "2" || v.toLowerCase().startsWith("rare")) {
-      setTool("rare");
-      append({ text: "" });
-      await typewrite("» Launching Rare Username Finder...", "oklch(0.78 0.16 200)", 14);
-      await spinTask("Booting namespace probe", 500);
-      append({ text: "" });
-      append({ text: "Username length (3–20):" });
-      setStage("askRareLen");
-    } else if (v === "3" || v.toLowerCase().startsWith("destroy") || v.toLowerCase().startsWith("webhook destroy")) {
-      setTool("destroyer");
-      append({ text: "" });
-      await typewrite("» Launching Webhook Destroyer...", "oklch(0.78 0.16 200)", 14);
-      await typewrite("[*] Arming spam cannon...", "oklch(0.78 0.16 200)", 10);
-      await sleep(300);
-      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
-      append({ text: "" });
-      append({ text: "Enter target webhook URL:" });
-      setStage("destroyAskUrl");
-    } else if (v === "4" || v.toLowerCase().startsWith("token")) {
-      setTool("tokengen");
-      append({ text: "" });
-      await typewrite("» Launching Token Generator...", "oklch(0.78 0.16 200)", 14);
-      await typewrite("[*] Spinning up token forge...", "oklch(0.78 0.16 200)", 10);
-      await sleep(280);
-      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
-      append({ text: "" });
-      append({ text: "How many fake tokens to generate? (100–1000)" });
-      setStage("askTokenCount");
-    } else if (v === "5" || v.toLowerCase().startsWith("nitro")) {
-      setTool("nitrogen");
-      append({ text: "" });
-      await typewrite("» Launching Fake Nitro Generator...", "oklch(0.78 0.16 200)", 14);
-      await typewrite("[*] Connecting to Discord gift backend...", "oklch(0.78 0.16 200)", 10);
-      await sleep(280);
-      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
-      append({ text: "" });
-      append({ text: "How many fake nitro codes to generate? (100–1000)" });
-      setStage("askNitroCount");
-    } else if (v === "6" || v.toLowerCase().startsWith("gmail")) {
-      setTool("gmailgen");
-      append({ text: "" });
-      await typewrite("» Launching Fake Gmail Generator...", "oklch(0.78 0.16 200)", 14);
-      await typewrite("[*] Spinning up SMTP forge...", "oklch(0.78 0.16 200)", 10);
-      await sleep(280);
-      await typewrite("    └─ done", "oklch(0.85 0.18 140)", 8);
-      append({ text: "" });
-      append({ text: "How many fake gmail accounts to generate? (100–1000)" });
-      setStage("askGmailCount");
+      await launch("dxxer", "Dxxer", "Please enter your webhook URL (Discord or Netlify):", "askWebhook");
+    } else if (v === "2" || lower.startsWith("rare")) {
+      await launch("rare", "Rare Username", "Username length (3–20):", "askRareLen");
+    } else if (v === "3" || lower.startsWith("destroy") || lower.startsWith("webhook destroy")) {
+      await launch("destroyer", "Webhook Destroyer", "Enter target webhook URL:", "destroyAskUrl");
+    } else if (v === "4" || lower.startsWith("token")) {
+      await launch("tokengen", "Token Generator", "How many fake tokens to generate? (100–1000)", "askTokenCount");
+    } else if (v === "5" || lower.startsWith("nitro")) {
+      await launch("nitrogen", "Fake Nitro Gen", "How many fake nitro codes to generate? (100–1000)", "askNitroCount");
+    } else if (v === "6" || lower.startsWith("gmail")) {
+      await launch("gmailgen", "Fake Gmail Gen", "How many fake gmail accounts to generate? (100–1000)", "askGmailCount");
     } else {
       append({ text: "Unknown selection. Type 1, 2, 3, 4, 5, or 6.", color: "var(--terminal-red)" });
     }
