@@ -38,7 +38,7 @@ const LEAF = String.raw`⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀�
 
 type Line = { text: string; color?: string };
 type Provider = "discord" | "netlify";
-type Tool = "dxxer" | "rare" | "destroyer" | "tokengen" | "nitrogen" | "gmailgen";
+type Tool = "dxxer" | "rare" | "destroyer" | "tokengen" | "nitrogen" | "gmailgen" | "termer";
 type Stage =
   | "banner"
   | "menu"
@@ -60,7 +60,11 @@ type Stage =
   | "askNitroCount"
   | "nitroGenerating"
   | "askGmailCount"
-  | "gmailGenerating";
+  | "gmailGenerating"
+  | "termerAskUrl"
+  | "termerConfirm1"
+  | "termerConfirm2"
+  | "termerSpamming";
 
 const FIRST = ["Johnathan","Marcus","Tyler","Aiden","Liam","Ethan","Mason","Lucas","Caleb","Nathan","Dylan","Jaxon","Owen","Wyatt","Sebastian","Hunter"];
 const MIDDLE = ["A.","B.","C.","D.","E.","F.","G.","H.","J.","K.","L.","M.","R.","S.","T."];
