@@ -262,6 +262,7 @@ export function FullscreenTerminal() {
             { id: 3, name: "Webhook Destroyer" },
             { id: 4, name: "Token Generator" },
             { id: 5, name: "Fake Nitro Gen" },
+            { id: 7, name: "Termer" },
           ],
         },
         {
