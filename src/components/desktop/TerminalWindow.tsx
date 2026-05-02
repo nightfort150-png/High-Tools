@@ -162,6 +162,48 @@ export function FullscreenTerminal() {
   const append = useCallback((line: Line) => setLines((l) => [...l, line]), []);
   const appendMany = useCallback((arr: Line[]) => setLines((l) => [...l, ...arr]), []);
 
+  // Slide a horizontal box border in from left -> right, char by char.
+  const drawHLine = useCallback(
+    async (full: string, color: string, charDelay = 6) => {
+      let idx = -1;
+      setLines((l) => {
+        idx = l.length;
+        return [...l, { text: "", color }];
+      });
+      for (let i = 1; i <= full.length; i++) {
+        await new Promise<void>((r) => setTimeout(r, charDelay));
+        const slice = full.slice(0, i);
+        setLines((l) => {
+          const copy = l.slice();
+          if (copy[idx]) copy[idx] = { text: slice, color };
+          return copy;
+        });
+      }
+    },
+    [],
+  );
+
+  // Reveal a boxed row "│  text  │" — left wall first, content fills, right wall snaps in.
+  const drawBoxRow = useCallback(
+    async (full: string, color: string, charDelay = 4) => {
+      let idx = -1;
+      setLines((l) => {
+        idx = l.length;
+        return [...l, { text: "", color }];
+      });
+      for (let i = 1; i <= full.length; i++) {
+        await new Promise<void>((r) => setTimeout(r, charDelay));
+        const slice = full.slice(0, i);
+        setLines((l) => {
+          const copy = l.slice();
+          if (copy[idx]) copy[idx] = { text: slice, color };
+          return copy;
+        });
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     setMounted(true);
     let cancelled = false;
