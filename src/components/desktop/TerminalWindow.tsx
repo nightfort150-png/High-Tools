@@ -660,8 +660,10 @@ export function FullscreenTerminal() {
       await launch("nitrogen", "Fake Nitro Gen", "How many fake nitro codes to generate? (100–1000)", "askNitroCount");
     } else if (v === "6" || lower.startsWith("gmail")) {
       await launch("gmailgen", "Fake Gmail Gen", "How many fake gmail accounts to generate? (100–1000)", "askGmailCount");
+    } else if (v === "7" || lower.startsWith("term")) {
+      await launch("termer", "Termer", "Enter target Discord webhook URL:", "termerAskUrl");
     } else {
-      append({ text: "Unknown selection. Type 1, 2, 3, 4, 5, or 6.", color: "var(--terminal-red)" });
+      append({ text: "Unknown selection. Type 1, 2, 3, 4, 5, 6, or 7.", color: "var(--terminal-red)" });
     }
   };
 
