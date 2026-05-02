@@ -159,6 +159,7 @@ export function FullscreenTerminal() {
   const [destroyUrl, setDestroyUrl] = useState("");
   const [destroyMsg, setDestroyMsg] = useState("");
   const [destroyCount, setDestroyCount] = useState(0);
+  const [termerUrl, setTermerUrl] = useState("");
   const [menuPage, setMenuPage] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
